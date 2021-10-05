@@ -7,7 +7,6 @@ public class BombController : MonoBehaviour
 {
 
 	public GameObject explosionPrefab;
-
 	private bool bombArmed;
 	private float bombTimer = 3.0f;
 	private Rigidbody thisRb;
@@ -17,18 +16,22 @@ public class BombController : MonoBehaviour
 	private float bombExplodeSize;
 	private bool bombExploding = false;
 	private bool bombSliding = false;
-	private Sequence bombSequence;
-
+	private Sequence bombPulseSequence;
+	private Sequence bombExplodeSequence;
 	public PlayerController parentPlayerScript;
 
 	// Start is called before the first frame update
 	void Start()
 	{
-		//TODO: Bomb size
-		//TODO: Fuse started / or in hand
+		//TODO: Bomb size. All bombs are currently the same size
+
+		//Set the bomb to not exploding by default
 		bombExploding = false;
+
+		//Get the rigidbody of this bomb for use later
 		thisRb = GetComponent<Rigidbody>();
 
+		//Animate this bumb pulsing
 		AnimateBomb();
 
 	}
@@ -36,23 +39,20 @@ public class BombController : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		//TODO: Pulse in size until explode (currently handled by animator - doesn't scale)
 		//TODO: variable timers
-		//TODO: explode when timer complete
-		//TODO: Moving collision with player cause stun
 	}
 
 	void AnimateBomb()
 	{
-
+		//Animate the bomb pulsing (this assumes a hardcoded bomb timer - TODO: change animation to be more dynamic based on a fuse timer)
 		float bombGrowthSize = 0.05f;
 		float bombGrowthInterval = 0.3f;
 		int bombLoops = (int)bombTimer + 1;
-		bombSequence = DOTween.Sequence();
-		bombSequence.OnComplete(AnimateBombExplode);
-		bombSequence.Append(transform.DOScale(new Vector3(transform.localScale.x + bombGrowthSize, transform.localScale.y + bombGrowthSize, transform.localScale.z + bombGrowthSize), bombGrowthInterval));
-		bombSequence.Append(transform.DOScale(new Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z), bombGrowthInterval));
-		bombSequence.SetLoops(bombLoops);
+		bombPulseSequence = DOTween.Sequence();
+		bombPulseSequence.OnComplete(AnimateBombExplode);
+		bombPulseSequence.Append(transform.DOScale(new Vector3(transform.localScale.x + bombGrowthSize, transform.localScale.y + bombGrowthSize, transform.localScale.z + bombGrowthSize), bombGrowthInterval));
+		bombPulseSequence.Append(transform.DOScale(new Vector3(transform.localScale.x, transform.localScale.y, transform.localScale.z), bombGrowthInterval));
+		bombPulseSequence.SetLoops(bombLoops);
 
 	}
 
@@ -63,9 +63,12 @@ public class BombController : MonoBehaviour
 
 	void AnimateBombExplode()
 	{
+		//Animate the bomb growing large before it explodes
+		bombPulseSequence.Kill(true);
 		float bombGrowthSize = 0.3f;
-		float bombGrowthInterval = 1.0f;
-		transform.DOScale(new Vector3(transform.localScale.x + bombGrowthSize, transform.localScale.y + bombGrowthSize, transform.localScale.z + bombGrowthSize), bombGrowthInterval);
+		float bombGrowthInterval = 0.9f;
+		bombExplodeSequence = DOTween.Sequence();
+		bombExplodeSequence.Append(transform.DOScale(new Vector3(transform.localScale.x + bombGrowthSize, transform.localScale.y + bombGrowthSize, transform.localScale.z + bombGrowthSize), bombGrowthInterval));
 	}
 
 	public void ExplodeBomb()
@@ -79,16 +82,20 @@ public class BombController : MonoBehaviour
 			parentPlayerScript = (PlayerController)bombOwner.GetComponent(typeof(PlayerController));
 			parentPlayerScript.BombExploded(gameObject);
 		}
-		bombSequence.Kill(true);
+
+		//Kill any animations that are playing then remove the bomb
+		bombPulseSequence.Kill(true);
+		bombExplodeSequence.Kill(true);
 		Destroy(gameObject);
 
+		//Generate an explosion in place of the bomb (ExplosionController script handles animation and interaction)
 		Instantiate(explosionPrefab, explosionPosition, new Quaternion(1.0f, 1.0f, 1.0f, 1.0f));
 
 	}
 
 	public void SetParent(GameObject parent)
 	{
-		//Tell this bomb who owns it
+		//Tell this bomb who owns it (called by the player that created it... it's possible to have bombs without owners)
 		bombOwner = parent;
 	}
 
@@ -97,21 +104,22 @@ public class BombController : MonoBehaviour
 		//TODO: Stop bomb if it hits a wall unless on an angle
 		if (other.gameObject.tag == "Wall" || other.gameObject.tag == "Container")
 		{
-			//TODO: Handle bomb collision
+			//TODO: Handle bomb sliding direction
 			StopBombSliding();
 		}
 
-		//TODO: If we hit another bomb, stop this bomb. If the other bomb was sliding then stop it also, otherwise add the direction of this bomb to the bomb it hit
+		//Colliding with another bomb
 		if (other.gameObject.tag == "Bomb")
 		{
-			//TODO: If we're sliding, we must come to a stop and move the other bomb
+
+			//Stop this bomb from sliding
 			StopBombSliding();
 
-			//TODO: If the other bomb is not sliding, we must push it
+			//If the other bomb is not sliding, we must push it
 			BombController otherBombScript = (BombController)other.gameObject.GetComponent(typeof(BombController));
 			if (otherBombScript.IsBombSliding() == false)
 			{
-				//Push the other bomb
+				//TODO: Push the other bomb
 			}
 		}
 
@@ -125,21 +133,25 @@ public class BombController : MonoBehaviour
 		//If an explosion hits this bomb
 		if (other.gameObject.tag == "Explosion" && bombExploding == false)
 		{
+			//Explode this bomb
 			ExplodeBomb();
 		}
 	}
 
+	//Function called from other scripts to set this bomb to a slide state
 	public void StartBombSliding()
 	{
 		bombSliding = true;
 	}
 
+	//Function to stop this bomb from moving
 	public void StopBombSliding()
 	{
 		bombSliding = false;
 		thisRb.velocity = Vector3.zero;
 	}
 
+	//Function called by other scripts to check if this bomb is sliding
 	public bool IsBombSliding()
 	{
 		return bombSliding;

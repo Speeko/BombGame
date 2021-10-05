@@ -70,7 +70,7 @@ public class PlayerController : MonoBehaviour
 
 		//TODO: Prevent player from clipping with walls/containers
 
-
+		//TODO: Make this movement block nicer - must be a better way
 		//Check if plaer has control (not stunned/inanimation/dead)
 		if (playerHasControl == true)
 		{
@@ -145,10 +145,14 @@ public class PlayerController : MonoBehaviour
 
 	void Action()
 	{
-		//Detect the input
+
+		//TODO: Handle picking up bomb (including spawning straight into hand)
+		//TODO: Pump up bomb when holding
+
+		//Detect the submit input (enter key by default)
 		if (Input.GetButtonDown("Submit") == true)
 		{
-			//Check if we're still standing on our last bomb (TODO: Needs updating to support not colliding with other players bombs)
+			//Check if we're still standing on our last bomb
 			if (lastBomb == null)
 			{
 				//Check if we have any bombs left
@@ -156,26 +160,29 @@ public class PlayerController : MonoBehaviour
 				{
 					//Spawn bomb
 					lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, 0.75f, transform.position.z), transform.rotation);
+					//Add this bomb to our list of bombs currently active
 					myBombsList.Add(lastBomb);
+					//Tell the bomb who its daddy is
 					lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
 					lastBombScript.SetParent(gameObject);
+					//Start the fuse of the bomb
 					lastBombScript.SetFuse();
+					//Decrement our remaining bombs by 1
 					remainingBombCount--;
 				}
 			}
 			else
 			{
-				//TODO: IF we're still standing on our bomb, then the input kicks it instead
-				//Debug.Log("Trying to kick the bomb we're standing on");
+				//If we're still standing on our bomb, then the input kicks it instead
 				KickBomb(lastBomb);
 			}
 
 		}
 
+		//Detect the cancel input (esc key by default)
 		if (Input.GetButtonDown("Cancel") == true)
 		{
-			//Stop our last kicked bomb
-			Debug.Log("cancel detected");
+			//Stop our last kicked bomb if it is still sliding
 			BombController lastKickedBombScript;
 			lastKickedBombScript = (BombController)lastKickedBomb.GetComponent(typeof(BombController));
 
@@ -188,14 +195,11 @@ public class PlayerController : MonoBehaviour
 
 		}
 
-		//TODO: Spawn bomb in hand
-		//TODO: Pump up bomb
-
 	}
 
 	void DrawRaycasts()
 	{
-		//TODO: Draw some raycasts
+		//TODO: Draw some raycasts for debugging
 	}
 
 	void OnTriggerExit(Collider other)
@@ -208,6 +212,13 @@ public class PlayerController : MonoBehaviour
 				lastBomb = null;
 			}
 		}
+	}
+
+	void PlayerStunned(Vector3 knockBack, float stunTime)
+	{
+		//TODO: Stun the player and knock them back
+		//TODO: Allow the player to decrease the stun time by mashing the button
+		//TODO: Show a stun animation
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -225,11 +236,11 @@ public class PlayerController : MonoBehaviour
 				if (incomingBomb.IsBombSliding() == true)
 				{
 					//TODO: Become stunned
-					incomingBomb.StopBombSliding();
+					//PlayerStunned();
 				}
 				else
 				{
-					//TODO: Kick the bomb nicely
+					//This bomb isn't moving so we can kick it
 					KickBomb(other.gameObject);
 				}
 			}
@@ -238,27 +249,31 @@ public class PlayerController : MonoBehaviour
 		//Colliding with a powerup
 		if (other.gameObject.tag == "Powerup")
 		{
+			//Increase our bomb count if we're not at the max already
 			if (maxBombCount < maxTotalBombs)
 			{
 				maxBombCount++;
 				remainingBombCount++;
 			}
 
+			//Remove the powerup we collected
 			Destroy(other.gameObject);
 		}
 
+		//TODO: If we hit a wall then stop moving
 		if (other.gameObject.tag == "Wall")
 		{
 			playerMovementDirection = new Vector3(0, 0, 0);
 		}
 
+		//TODO: If we hit a container then stop moving
 		if (other.gameObject.tag == "Container")
 		{
 			playerMovementDirection = new Vector3(0, 0, 0);
 		}
 	}
 
-	//This is called by the bomb when it explodes
+	//This is called by one of our children bombs when it explodes
 	public void BombExploded(GameObject bomb)
 	{
 		//If the exploding bomb was ours, then give us back our bomb count
@@ -271,10 +286,11 @@ public class PlayerController : MonoBehaviour
 
 	void KickBomb(GameObject bomb)
 	{
+
 		BombController otherBombScript;
-		//Check if this bomb can be kicked
 		otherBombScript = (BombController)bomb.GetComponent(typeof(BombController));
 
+		//Check if this bomb can be kicked
 		if (otherBombScript.IsBombSliding() == false)
 		{
 			//Take away control while we kick the bomb
@@ -282,6 +298,7 @@ public class PlayerController : MonoBehaviour
 			playerHasControl = false;
 		}
 
+		//Set the bomb we kicked to a sliding state
 		otherBombScript.StartBombSliding();
 
 	}
@@ -293,12 +310,15 @@ public class PlayerController : MonoBehaviour
 		//Check the bomb hasn't exploded in the time it took to kick
 		if (bomb != null)
 		{
+			//Kick the bomb in the direction we're facing
 			Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
 			otherBombRb.AddForce(direction * 100);
 		}
 
+		//Bomb has been kicked, give us back control
 		playerHasControl = true;
 
+		//Save the last bomb we kicked so we can stop it with an input
 		lastKickedBomb = bomb;
 	}
 

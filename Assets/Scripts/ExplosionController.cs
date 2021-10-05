@@ -16,15 +16,13 @@ public class ExplosionController : MonoBehaviour
 	// Start is called before the first frame update
 	void Start()
 	{
+		//TODO: Make these variables which can be set by the bomb size/strength
 		explosionTimer = 0.5f;
 		explosionSize = 2.5f;
 
-		thisRender = GetComponent<MeshRenderer>();
-
+		//Start the explosion animation
 		ExplosionAnimation();
 
-		//TODO: There's probably a better way to remove the explosion using DoTween OnComplete()
-		//Invoke("ExplosionEnd", explosionTimer);
 	}
 
 	// Update is called once per frame
@@ -35,27 +33,33 @@ public class ExplosionController : MonoBehaviour
 
 	void ExplosionAnimation()
 	{
+		//Expand the explosion and fade it out
+		thisRender = GetComponent<MeshRenderer>();
 		Sequence explosionSequence;
 		explosionSequence = DOTween.Sequence();
 		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer));
 		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer));
 		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer));
 		explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionTimer));
+		//Call ExplosionEnd to destroy the explosion when the animation has completed
 		explosionSequence.OnComplete(ExplosionEnd);
 	}
 
 	void ExplosionEnd()
 	{
+		//Destroy this explosion
 		Destroy(gameObject);
 	}
 
 	//Check collision
 	void OnTriggerEnter(Collider other)
 	{
-		//TODO: Collision with container create powerup
+		//If the explosion hits a container, destroy it and generate a powerup
 		if (other.gameObject.tag == "Container")
 		{
+			//Create a powerup (including chance for no powerup)
 			CreatePowerup(other.gameObject.transform.position);
+			//TODO: Add some kind of animation for destroying this (like a puff of smoke)
 			Destroy(other.gameObject);
 		}
 
@@ -68,6 +72,7 @@ public class ExplosionController : MonoBehaviour
 
 	void CreatePowerup(Vector3 position)
 	{
+		//TODO: Make powerups random (including chance for no powerup)
 		Instantiate(powerupBombUpPrefab, position, new Quaternion(1.0f, 1.0f, 1.0f, 1.0f));
 	}
 
