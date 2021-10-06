@@ -18,7 +18,6 @@ public class BombController : MonoBehaviour
 	private bool bombSliding = false;
 	private Sequence bombPulseSequence;
 	private Sequence bombExplodeSequence;
-	public PlayerController parentPlayerScript;
 
 	// Start is called before the first frame update
 	void Start()
@@ -31,7 +30,7 @@ public class BombController : MonoBehaviour
 		//Get the rigidbody of this bomb for use later
 		thisRb = GetComponent<Rigidbody>();
 
-		//Animate this bumb pulsing
+		//Animate this bomb pulsing
 		AnimateBomb();
 
 	}
@@ -79,7 +78,7 @@ public class BombController : MonoBehaviour
 		//Call BombExploded() on the owner player to update their bombcount, if this bomb has an owner
 		if (bombOwner != null)
 		{
-			parentPlayerScript = (PlayerController)bombOwner.GetComponent(typeof(PlayerController));
+			PlayerController parentPlayerScript = (PlayerController)bombOwner.GetComponent(typeof(PlayerController));
 			parentPlayerScript.BombExploded(gameObject);
 		}
 
@@ -89,7 +88,7 @@ public class BombController : MonoBehaviour
 		Destroy(gameObject);
 
 		//Generate an explosion in place of the bomb (ExplosionController script handles animation and interaction)
-		Instantiate(explosionPrefab, explosionPosition, new Quaternion(1.0f, 1.0f, 1.0f, 1.0f));
+		Instantiate(explosionPrefab, explosionPosition, Quaternion.identity);
 
 	}
 

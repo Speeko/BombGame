@@ -8,7 +8,13 @@ TagManager:
   - Bomb
   - Explosion
   - Container
-  - Powerup
+  - Powerup-Bomb
+  - Powerup-Speed
+  - Powerup-Explosion
+  - Powerup-Health
+  - Powerup-Life
+  - Powerup-Throw
+  - Powerup-Kick
   layers:
   - Default
   - TransparentFX

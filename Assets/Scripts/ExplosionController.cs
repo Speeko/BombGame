@@ -8,7 +8,6 @@ public class ExplosionController : MonoBehaviour
 
 	private float explosionTimer;
 	public float explosionSize;
-	public BombController otherBombScript;
 	private MeshRenderer thisRender;
 	public GameObject powerupBombUpPrefab;
 
@@ -37,9 +36,9 @@ public class ExplosionController : MonoBehaviour
 		thisRender = GetComponent<MeshRenderer>();
 		Sequence explosionSequence;
 		explosionSequence = DOTween.Sequence();
-		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer));
-		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer));
-		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer));
+		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer - (explosionTimer / 2)));
+		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer - (explosionTimer / 2)));
+		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer - (explosionTimer / 2)));
 		explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionTimer));
 		//Call ExplosionEnd to destroy the explosion when the animation has completed
 		explosionSequence.OnComplete(ExplosionEnd);
@@ -67,13 +66,15 @@ public class ExplosionController : MonoBehaviour
 		if (other.gameObject.tag == "Player")
 		{
 			//TODO: Kill player
+			PlayerController player = (PlayerController)other.gameObject.GetComponent(typeof(PlayerController));
+			player.PlayerDamage("Explosion");
 		}
 	}
 
 	void CreatePowerup(Vector3 position)
 	{
 		//TODO: Make powerups random (including chance for no powerup)
-		Instantiate(powerupBombUpPrefab, position, new Quaternion(1.0f, 1.0f, 1.0f, 1.0f));
+		Instantiate(powerupBombUpPrefab, position, Quaternion.identity);
 	}
 
 }
