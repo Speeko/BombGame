@@ -2,55 +2,64 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
 
+
+
+	//Get GameObject Components
+	private Rigidbody thisRb;
+	private Animator thisAnim;
+
+	//Set some prefabs
 	public GameObject bombPrefab;
 
-	private Rigidbody thisRb;
-	private int explosionStrength;
-	private int maxBombCount;
-	private int maxTotalBombs;
-	private int remainingBombCount;
-	private int currentMoveSpeed;
-	private int moveSpeed;
-	private bool isGhost;
-	private Vector3 inputDirection;
-	public GameObject[] myBombs;
-	private bool canKickBomb;
-	public GameObject lastBomb;
-	public BombController lastBombScript;
+	//Set some default player variables
+	private int explosionStrength = 1;
+	private int maxExplosionStrength = 8;
+	private int moveSpeed = 1;
+	private int maxMoveSpeed = 8;
+	private int maxBombCount = 2;
+	private int maxTotalBombs = 8;
+	private bool isGhost = false;
+
+	//Set variables to handle bombs
+	private GameObject lastBomb;
+	private BombController lastBombScript;
 	public List<GameObject> myBombsList;
-	private Vector3 playerMovementDirection;
-	private bool playerHasControl;
-	private Vector3 playerLastMovementDirection;
-	private bool playerMoving;
-	private GameObject lastKickedBomb;
+
+	private int remainingBombCount;
+	private bool canKickBomb;
 	private BombController otherBombScript;
+	private GameObject lastKickedBomb;
+
+	//Set movement variables
+	private bool playerHasControl = true;
+	private Vector3 playerMovementDirection;
+	private Vector3 playerLastMovementDirection = new Vector3(0, 0, -1); //Face downards by default
+	private bool playerMoving = false;
+	private float movementX;
+	private float movementY;
+
 
 
 	// Start is called before the first frame update
 	void Start()
 	{
+		//Get some GameObject components for use later
 		thisRb = GetComponent<Rigidbody>();
-		//TODO: Player explosion strength
-		explosionStrength = 1;
+		thisAnim = GetComponent<Animator>();
 
-		//TODO: Player number of bombs
-		maxTotalBombs = 8;
-		maxBombCount = 2;
+		//TODO: Player speed multiplier
+		//TODO: Player explosion strength
+
+		//Set our remaining bombs to our starting bomb count
 		remainingBombCount = maxBombCount;
 
-		//TODO: Player speed multiplyer
-		moveSpeed = 1;
 
 		//TODO: Player as ghost
-		isGhost = false;
-
-		playerHasControl = true;
-		//Player faces down by default
-		playerLastMovementDirection = new Vector3(0, 0, -1);
 
 	}
 
@@ -62,87 +71,118 @@ public class PlayerController : MonoBehaviour
 		//TODO: Powerup pickups (speed, bomb number)
 		DrawRaycasts();
 
-
-	}
-
-	void OnMove()
-	{
-
-		//TODO: Prevent player from clipping with walls/containers
-
-		//TODO: Make this movement block nicer - must be a better way
-		//Check if plaer has control (not stunned/inanimation/dead)
-
+		//Check if we're allowed to move (not stunned/in animation)
 		if (playerHasControl == true)
 		{
-			//Check movement direction
-			if (Input.GetAxisRaw("Horizontal") != 0.0f || Input.GetAxisRaw("Vertical") != 0.0f)
-			{
-				//Player has entered some input so we are moving
-				playerMoving = true;
+			//Set the movement direction from the input manager
+			playerMovementDirection = new Vector3(movementX, 0.0f, movementY);
 
-				if (Input.GetAxisRaw("Horizontal") < 0.0f && Input.GetAxisRaw("Vertical") > 0.0f)
-				{
-					//Debug.Log("Up-Left");
-					playerMovementDirection = new Vector3(-1, 0, 1);
-				}
-				else if (Input.GetAxisRaw("Horizontal") < 0.0f && Input.GetAxisRaw("Vertical") < 0.0f)
-				{
-					//Debug.Log("Down-Left");
-					playerMovementDirection = new Vector3(-1, 0, -1);
-				}
-				else if (Input.GetAxisRaw("Horizontal") > 0.0f && Input.GetAxisRaw("Vertical") > 0.0f)
-				{
-					//Debug.Log("Up-Right");
-					playerMovementDirection = new Vector3(1, 0, 1);
-				}
-				else if (Input.GetAxisRaw("Horizontal") > 0.0f && Input.GetAxisRaw("Vertical") < 0.0f)
-				{
-					//Debug.Log("Down-Right");
-					playerMovementDirection = new Vector3(1, 0, -1);
-				}
-				else if (Input.GetAxisRaw("Horizontal") < 0.0f)
-				{
-					//Debug.Log("Left");
-					playerMovementDirection = new Vector3(-1, 0, 0);
-				}
-				else if (Input.GetAxisRaw("Horizontal") > 0.0f)
-				{
-					//Debug.Log("Right");
-					playerMovementDirection = new Vector3(1, 0, 0);
-				}
-				else if (Input.GetAxisRaw("Vertical") > 0.0f)
-				{
-					//Debug.Log("Up");
-					playerMovementDirection = new Vector3(0, 0, 1);
-				}
-				else if (Input.GetAxisRaw("Vertical") < 0.0f)
-				{
-					//Debug.Log("Down");
-					playerMovementDirection = new Vector3(0, 0, -1);
-				}
+			//If our movement is greater than 0, then set the playerMoving bool and store our lastMovementDirection for use when we stop
+			if (movementX != 0.0f || movementY != 0.0f)
+			{
+				playerMoving = true;
+				playerLastMovementDirection = playerMovementDirection;
 			}
 			else
 			{
-				//Player has not entered input, we're not moving
-				playerMovementDirection = new Vector3(0, 0, 0);
 				playerMoving = false;
 			}
 
-
-			if (playerMoving == true)
-			{
-				//If we're moving, store the last direction for use when we stop
-				playerLastMovementDirection = playerMovementDirection;
-			}
-
-			//Apply the player input to the character
+			//Move the player
 			transform.Translate(playerMovementDirection * (moveSpeed * Time.deltaTime));
 
 		}
 
+	}
+
+	void OnMove(InputValue movementValue)
+	{
+
+		Vector2 movementVector = movementValue.Get<Vector2>();
+
+		movementX = movementVector.x;
+		movementY = movementVector.y;
 
 	}
+
+	// void OnMove()
+	// {
+
+	// 	//TODO: Prevent player from clipping with walls/containers
+
+	// 	//TODO: Make this movement block nicer - must be a better way
+	// 	//Check if plaer has control (not stunned/inanimation/dead)
+
+	// 	if (playerHasControl == true)
+	// 	{
+	// 		//Check movement direction
+	// 		if (Input.GetAxisRaw("Horizontal") != 0.0f || Input.GetAxisRaw("Vertical") != 0.0f)
+	// 		{
+	// 			//Player has entered some input so we are moving
+	// 			playerMoving = true;
+
+	// 			if (Input.GetAxisRaw("Horizontal") < 0.0f && Input.GetAxisRaw("Vertical") > 0.0f)
+	// 			{
+	// 				//Debug.Log("Up-Left");
+	// 				playerMovementDirection = new Vector3(-1, 0, 1);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Horizontal") < 0.0f && Input.GetAxisRaw("Vertical") < 0.0f)
+	// 			{
+	// 				//Debug.Log("Down-Left");
+	// 				playerMovementDirection = new Vector3(-1, 0, -1);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Horizontal") > 0.0f && Input.GetAxisRaw("Vertical") > 0.0f)
+	// 			{
+	// 				//Debug.Log("Up-Right");
+	// 				playerMovementDirection = new Vector3(1, 0, 1);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Horizontal") > 0.0f && Input.GetAxisRaw("Vertical") < 0.0f)
+	// 			{
+	// 				//Debug.Log("Down-Right");
+	// 				playerMovementDirection = new Vector3(1, 0, -1);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Horizontal") < 0.0f)
+	// 			{
+	// 				//Debug.Log("Left");
+	// 				playerMovementDirection = new Vector3(-1, 0, 0);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Horizontal") > 0.0f)
+	// 			{
+	// 				//Debug.Log("Right");
+	// 				playerMovementDirection = new Vector3(1, 0, 0);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Vertical") > 0.0f)
+	// 			{
+	// 				//Debug.Log("Up");
+	// 				playerMovementDirection = new Vector3(0, 0, 1);
+	// 			}
+	// 			else if (Input.GetAxisRaw("Vertical") < 0.0f)
+	// 			{
+	// 				//Debug.Log("Down");
+	// 				playerMovementDirection = new Vector3(0, 0, -1);
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			//Player has not entered input, we're not moving
+	// 			playerMovementDirection = new Vector3(0, 0, 0);
+	// 			playerMoving = false;
+	// 		}
+
+
+	// 		if (playerMoving == true)
+	// 		{
+	// 			//If we're moving, store the last direction for use when we stop
+	// 			playerLastMovementDirection = playerMovementDirection;
+	// 		}
+
+	// 		//Apply the player input to the character
+	// 		transform.Translate(playerMovementDirection * (moveSpeed * Time.deltaTime));
+
+	// 	}
+
+
+	// }
 
 	void OnBomb()
 	{
@@ -191,6 +231,11 @@ public class PlayerController : MonoBehaviour
 			lastKickedBombScript.StopBombSliding();
 		}
 
+	}
+
+	void DropBomb()
+	{
+		//TODO: Move the bomb drop logic here to support bombs being dropped by a curse rather than player input
 	}
 
 	void DrawRaycasts()
@@ -245,6 +290,9 @@ public class PlayerController : MonoBehaviour
 		//Colliding with a powerup
 		if (other.gameObject.tag == "Powerup")
 		{
+			//TODO: Handle different types of powerups
+
+			//BOMB UP
 			//Increase our bomb count if we're not at the max already
 			if (maxBombCount < maxTotalBombs)
 			{
@@ -252,8 +300,17 @@ public class PlayerController : MonoBehaviour
 				remainingBombCount++;
 			}
 
+			//SPEED UP
+
+			//EXPLOSION UP
+
 			//Remove the powerup we collected
 			Destroy(other.gameObject);
+		}
+
+		if (other.gameObject.tag == "Special")
+		{
+			//TODO: Implement special powerups (like curses, boons)
 		}
 
 		//TODO: If we hit a wall then stop moving
@@ -294,6 +351,9 @@ public class PlayerController : MonoBehaviour
 			playerHasControl = false;
 		}
 
+		//Start playing the bomb kick animation
+		thisAnim.SetTrigger("Kick");
+
 	}
 
 	IEnumerator DoKickBomb(GameObject bomb, Vector3 direction, float time)
@@ -303,6 +363,7 @@ public class PlayerController : MonoBehaviour
 		//Check the bomb hasn't exploded in the time it took to kick
 		if (bomb != null)
 		{
+
 			//Kick the bomb in the direction we're facing
 			Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
 			otherBombRb.AddForce(direction * 100);
