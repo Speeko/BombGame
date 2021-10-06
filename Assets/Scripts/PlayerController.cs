@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
 	private Vector3 playerLastMovementDirection;
 	private bool playerMoving;
 	private GameObject lastKickedBomb;
+	private BombController otherBombScript;
 
 
 	// Start is called before the first frame update
@@ -60,24 +61,23 @@ public class PlayerController : MonoBehaviour
 		//TODO: Player stunned
 		//TODO: Powerup pickups (speed, bomb number)
 		DrawRaycasts();
-		Movement(); //Process direction input
-		Action(); //Process actions like bomb drop
+
 
 	}
 
-	void Movement()
+	void OnMove()
 	{
 
 		//TODO: Prevent player from clipping with walls/containers
 
 		//TODO: Make this movement block nicer - must be a better way
 		//Check if plaer has control (not stunned/inanimation/dead)
+
 		if (playerHasControl == true)
 		{
 			//Check movement direction
 			if (Input.GetAxisRaw("Horizontal") != 0.0f || Input.GetAxisRaw("Vertical") != 0.0f)
 			{
-
 				//Player has entered some input so we are moving
 				playerMoving = true;
 
@@ -129,6 +129,7 @@ public class PlayerController : MonoBehaviour
 				playerMoving = false;
 			}
 
+
 			if (playerMoving == true)
 			{
 				//If we're moving, store the last direction for use when we stop
@@ -138,61 +139,56 @@ public class PlayerController : MonoBehaviour
 			//Apply the player input to the character
 			transform.Translate(playerMovementDirection * (moveSpeed * Time.deltaTime));
 
-
 		}
+
 
 	}
 
-	void Action()
+	void OnBomb()
 	{
 
 		//TODO: Handle picking up bomb (including spawning straight into hand)
 		//TODO: Pump up bomb when holding
 
-		//Detect the submit input (enter key by default)
-		if (Input.GetButtonDown("Submit") == true)
+		//Check if we're still standing on our last bomb
+		if (lastBomb == null)
 		{
-			//Check if we're still standing on our last bomb
-			if (lastBomb == null)
+			//Check if we have any bombs left
+			if (remainingBombCount > 0)
 			{
-				//Check if we have any bombs left
-				if (remainingBombCount > 0)
-				{
-					//Spawn bomb
-					lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, 0.75f, transform.position.z), transform.rotation);
-					//Add this bomb to our list of bombs currently active
-					myBombsList.Add(lastBomb);
-					//Tell the bomb who its daddy is
-					lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
-					lastBombScript.SetParent(gameObject);
-					//Start the fuse of the bomb
-					lastBombScript.SetFuse();
-					//Decrement our remaining bombs by 1
-					remainingBombCount--;
-				}
+				//Spawn bomb
+				lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, 0.75f, transform.position.z), transform.rotation);
+				//Add this bomb to our list of bombs currently active
+				myBombsList.Add(lastBomb);
+				//Tell the bomb who its daddy is
+				lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
+				lastBombScript.SetParent(gameObject);
+				//Start the fuse of the bomb
+				lastBombScript.SetFuse();
+				//Decrement our remaining bombs by 1
+				remainingBombCount--;
 			}
-			else
-			{
-				//If we're still standing on our bomb, then the input kicks it instead
-				KickBomb(lastBomb);
-			}
-
+		}
+		else
+		{
+			//If we're still standing on our bomb, then the input kicks it instead
+			//TODO: Check if we're standing on ANY bomb (it could happen) and kick it
+			KickBomb(lastBomb);
 		}
 
-		//Detect the cancel input (esc key by default)
-		if (Input.GetButtonDown("Cancel") == true)
+	}
+
+	void OnStopSlide()
+	{
+		//Stop our last kicked bomb if it is still sliding
+		BombController lastKickedBombScript;
+		lastKickedBombScript = (BombController)lastKickedBomb.GetComponent(typeof(BombController));
+
+		if (lastKickedBombScript.IsBombSliding() == true)
 		{
-			//Stop our last kicked bomb if it is still sliding
-			BombController lastKickedBombScript;
-			lastKickedBombScript = (BombController)lastKickedBomb.GetComponent(typeof(BombController));
-
-			if (lastKickedBombScript.IsBombSliding() == true)
-			{
-				Rigidbody lastKickedBombRb = lastKickedBomb.GetComponent<Rigidbody>();
-				lastKickedBombRb.velocity = Vector3.zero;
-				lastKickedBombScript.StopBombSliding();
-			}
-
+			Rigidbody lastKickedBombRb = lastKickedBomb.GetComponent<Rigidbody>();
+			lastKickedBombRb.velocity = Vector3.zero;
+			lastKickedBombScript.StopBombSliding();
 		}
 
 	}
@@ -287,7 +283,7 @@ public class PlayerController : MonoBehaviour
 	void KickBomb(GameObject bomb)
 	{
 
-		BombController otherBombScript;
+
 		otherBombScript = (BombController)bomb.GetComponent(typeof(BombController));
 
 		//Check if this bomb can be kicked
@@ -297,9 +293,6 @@ public class PlayerController : MonoBehaviour
 			StartCoroutine(DoKickBomb(bomb, playerLastMovementDirection, 0.2f));
 			playerHasControl = false;
 		}
-
-		//Set the bomb we kicked to a sliding state
-		otherBombScript.StartBombSliding();
 
 	}
 
@@ -313,6 +306,9 @@ public class PlayerController : MonoBehaviour
 			//Kick the bomb in the direction we're facing
 			Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
 			otherBombRb.AddForce(direction * 100);
+
+			//Set the bomb we kicked to a sliding state
+			otherBombScript.StartBombSliding();
 		}
 
 		//Bomb has been kicked, give us back control

@@ -112,15 +112,19 @@ public class BombController : MonoBehaviour
 		if (other.gameObject.tag == "Bomb")
 		{
 
-			//Stop this bomb from sliding
-			StopBombSliding();
-
 			//If the other bomb is not sliding, we must push it
 			BombController otherBombScript = (BombController)other.gameObject.GetComponent(typeof(BombController));
 			if (otherBombScript.IsBombSliding() == false)
 			{
 				//TODO: Push the other bomb
+				Rigidbody otherBombRb = other.gameObject.GetComponent<Rigidbody>();
+				//Use vector3.reflect to reverse the normalised velocity of this bomb
+				Vector3 bombPushDirection = Vector3.Reflect(thisRb.velocity.normalized, Vector3.zero);
+				otherBombRb.AddForce(bombPushDirection * 100);
 			}
+
+			//Stop this bomb from sliding
+			StopBombSliding();
 		}
 
 		//TODO: Stop bomb and stun player if player is not us
@@ -142,6 +146,7 @@ public class BombController : MonoBehaviour
 	public void StartBombSliding()
 	{
 		bombSliding = true;
+		//TODO: Add some code to handle sliding movement and speed, using unity physics is a PITA
 	}
 
 	//Function to stop this bomb from moving
