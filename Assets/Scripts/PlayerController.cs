@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
 	//Get GameObject Components
 	private Rigidbody thisRb;
 	private Animator thisAnim;
+	private MeshRenderer thisRender;
 
 	//Set some prefabs
 	public GameObject bombPrefab;
@@ -22,20 +23,21 @@ public class PlayerController : MonoBehaviour
 	private bool isGhost = false;
 	private float invincibilityTime = 3.0f;
 	private float respawnTimer = 3.0f;
+	private bool isInvincible = false;
 
 	//Set variables for powerups
 	private bool kickPowerup = false;
 	private bool throwPowerup = false;
-	private int playerHealth = 1;
+	private int playerHealth = 8; //TODO: Change to 1 when shipped
 	private int maxPlayerHealth = 4;
 	private int playerLives = 1;
 	private int maxPlayerLives = 2;
 	private int explosionStrength = 1;
-	private int maxExplosionStrength = 4;
+	private int maxExplosionStrength = 8;
 	private int moveSpeed = 1;
 	private int maxMoveSpeed = 4;
 	private int maxBombCount = 2;
-	private int maxTotalBombs = 4;
+	private int maxTotalBombs = 8;
 
 	//Set variables to handle bombs
 	private GameObject lastBomb;
@@ -62,8 +64,8 @@ public class PlayerController : MonoBehaviour
 	private Text eventTestText;
 	public GameObject healthTestTextGameObject;
 	private Text healthTestText;
-	public GameObject livesTestTextGameObject;
-	private Text livesTestText;
+	public GameObject statsTestTextGameObject;
+	private Text statsTestText;
 
 
 	// Start is called before the first frame update
@@ -72,6 +74,7 @@ public class PlayerController : MonoBehaviour
 		//Get some GameObject components for use later
 		thisRb = GetComponent<Rigidbody>();
 		thisAnim = GetComponent<Animator>();
+		thisRender = GetComponent<MeshRenderer>();
 
 		//TODO: Player speed multiplier
 		//TODO: Player explosion strength
@@ -99,10 +102,8 @@ public class PlayerController : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		//TODO: Player death
 		//TODO: Player stunned
-		//TODO: Powerup pickups (speed, bomb number)
-
+		//TODO: Gravity
 
 		//Move the player
 		if (playerHasControl == true)
@@ -116,14 +117,13 @@ public class PlayerController : MonoBehaviour
 
 		//TODO: Remove DEBUG/TEST text
 		healthTestText = healthTestTextGameObject.GetComponent<Text>();
-		healthTestText.text = "health: " + playerHealth;
-		livesTestText = livesTestTextGameObject.GetComponent<Text>();
-		livesTestText.text = "lives: " + playerLives;
+		healthTestText.text = "health: " + playerHealth + "\n" + "lives: " + playerLives;
+		statsTestText = statsTestTextGameObject.GetComponent<Text>();
+		statsTestText.text = "bombs: " + maxBombCount + "\n" + "speed: " + moveSpeed + "\n" + "explosion: " + explosionStrength + "\n" + "CanKick: " + kickPowerup + "\n" + "CanThrow: " + throwPowerup;
 	}
 
 	void OnMove(InputValue movementValue)
 	{
-
 
 		//TODO: Only allow player to move in 8 directions (like N64)
 		Vector2 movementVector = movementValue.Get<Vector2>();
@@ -145,6 +145,8 @@ public class PlayerController : MonoBehaviour
 		{
 			playerMoving = false;
 		}
+
+		//TODO: Handle sliding along collision objects
 
 
 
@@ -200,14 +202,14 @@ public class PlayerController : MonoBehaviour
 			//Tell the bomb who its daddy is
 			lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
 			lastBombScript.SetParent(gameObject);
+			//Set the bomb's explosion strength to our current explosion strength
+			lastBombScript.SetBombExplosionPower(explosionStrength);
 			//Start the fuse of the bomb
 			lastBombScript.SetFuse();
 			//Decrement our remaining bombs by 1
 			remainingBombCount--;
 		}
 	}
-
-
 
 	void DrawRaycasts()
 	{
@@ -222,11 +224,11 @@ public class PlayerController : MonoBehaviour
 				if (hit.collider.gameObject != gameObject && collisionTagList.Contains(hit.collider.gameObject.tag.ToString()))
 				{
 					Debug.Log(hit.collider.gameObject.tag);
-					Debug.DrawLine(playerFeet, playerFeet + playerMovementDirection, Color.red, 0.1f);
+					Debug.DrawLine(playerFeet, playerFeet + playerMovementDirection, Color.red, 1.0f);
 				}
 				else
 				{
-					Debug.DrawLine(playerFeet, playerFeet + playerMovementDirection, Color.yellow, 1.0f);
+					Debug.DrawLine(playerFeet, playerFeet + playerMovementDirection, Color.yellow, 0.01f);
 				}
 			}
 		}
@@ -245,37 +247,38 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	public void PlayerDamage(string source)
+	public void PlayerDamage()
 	{
-		if (source == "Explosion")
+		if (isInvincible == false)
 		{
 			if (playerHealth > 1)
 			{
 				//TODO: Play animation of losing health
 				playerHealth--;
+				PlayerInvincible(10);
 			}
 			else
 			{
-				PlayerDeath(source);
+				PlayerDeath();
 			}
 		}
 	}
 
-	void PlayerDeath(string source)
+	void PlayerDeath()
 	{
-		if (source == "Explosion")
-		{
-			Vector3 deathPosition = transform.position;
-			//TODO: Play death by explosion animation
-			if (playerLives > 1)
-			{
-				playerLives--;
-				//Respawn the player where they died
-				//TODO: Support respawning the player at a random location if deathPosition is OOB
-				PlayerRespawn(deathPosition);
-			}
-		}
 
+		//TODO: Tell the game controller we need to respawn
+		gameObject.SetActive(false);
+
+		Vector3 deathPosition = transform.position;
+		//TODO: Play death by explosion animation
+		if (playerLives > 1)
+		{
+			playerLives--;
+			//Respawn the player where they died
+			//TODO: Support respawning the player at a random location if deathPosition is OOB
+			PlayerRespawn(deathPosition);
+		}
 
 		throwPowerup = false;
 		kickPowerup = false;
@@ -283,15 +286,41 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	void PlayerInvincible(float time)
+	void PlayerInvincible(int time)
 	{
+		//Set player to an invincible state and rapidly fade in/out
+		isInvincible = true;
+
+		float minFade = 0.1f;
+		float maxFade = 1.0f;
+		float interval = 0.05f;
+
+		Sequence invincibilitySequence = DOTween.Sequence();
+		invincibilitySequence.SetLoops(time);
+		invincibilitySequence.OnComplete(PlayerInvincibleEnd);
+		invincibilitySequence.Append(thisRender.material.DOFade(minFade, interval));
+		invincibilitySequence.Append(thisRender.material.DOFade(maxFade, interval));
+		invincibilitySequence.Play();
+
+	}
+
+	void PlayerInvincibleEnd()
+	{
+		//Invincibility is ending, reset things
+		isInvincible = false;
+		thisRender.material.DOFade(1.0f, 0.0f).Play();
 
 	}
 
 	void PlayerRespawn(Vector3 respawnPosition)
 	{
+		//TODO: move this to the game controller
+		gameObject.transform.position = respawnPosition;
+
+		float respawnTime = 1.0f;
 
 	}
+
 
 	void PlayerStunned(Vector3 knockBack, float stunTime)
 	{
@@ -347,6 +376,26 @@ public class PlayerController : MonoBehaviour
 		{
 			playerMovementDirection = new Vector3(0, 0, 0);
 		}
+
+		//Colliding with an explosion
+		if (other.gameObject.tag == "Explosion")
+		{
+			PlayerDamage();
+		}
+	}
+
+	//TODO: Remove this
+	public void DebugThing()
+	{
+		// UpdateEventTestText("explosion up");
+		// //EXPLOSION UP
+		// if (explosionStrength < maxExplosionStrength)
+		// {
+		// 	explosionStrength++;
+		// }
+
+		playerHealth--;
+
 	}
 
 	void GetPowerup(GameObject powerup)

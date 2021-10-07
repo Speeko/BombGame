@@ -10,17 +10,23 @@ public class ExplosionController : MonoBehaviour
 	public float explosionSize;
 	private MeshRenderer thisRender;
 	public GameObject powerupBombUpPrefab;
-
+	public GameObject explosionPrefab;
+	private float explosionExpansionInterval;
+	private int explosionExpansionCurrent;
+	private int explosionExpansion;
+	private bool explosionCanTrigger;
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		//TODO: Make these variables which can be set by the bomb size/strength
-		explosionTimer = 0.5f;
-		explosionSize = 2.5f;
 
-		//Start the explosion animation
-		ExplosionAnimation();
+		//explosionPower = 1;
+		//explosionExpansionInterval = 0.025f;
+		//explosionExpansion = 5;
+
+
+
 
 	}
 
@@ -28,26 +34,6 @@ public class ExplosionController : MonoBehaviour
 	void Update()
 	{
 
-	}
-
-	void ExplosionAnimation()
-	{
-		//Expand the explosion and fade it out
-		thisRender = GetComponent<MeshRenderer>();
-		Sequence explosionSequence;
-		explosionSequence = DOTween.Sequence();
-		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer - (explosionTimer / 2)));
-		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer - (explosionTimer / 2)));
-		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer - (explosionTimer / 2)));
-		explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionTimer));
-		//Call ExplosionEnd to destroy the explosion when the animation has completed
-		explosionSequence.OnComplete(ExplosionEnd);
-	}
-
-	void ExplosionEnd()
-	{
-		//Destroy this explosion
-		Destroy(gameObject);
 	}
 
 	//Check collision
@@ -62,13 +48,74 @@ public class ExplosionController : MonoBehaviour
 			Destroy(other.gameObject);
 		}
 
-		//TODO: collision with player cause death
-		if (other.gameObject.tag == "Player")
-		{
-			//TODO: Kill player
-			PlayerController player = (PlayerController)other.gameObject.GetComponent(typeof(PlayerController));
-			player.PlayerDamage("Explosion");
-		}
+		// This was moved to PlayerController
+		// //TODO: collision with player cause death
+		// if (other.gameObject.tag == "Player")
+		// {
+		// 	//TODO: Kill player
+		// 	PlayerController player = (PlayerController)other.gameObject.GetComponent(typeof(PlayerController));
+		// 	player.PlayerDamage("Explosion");
+		// }
+	}
+
+	public void SetExplosionPower(int power)
+	{
+		//TODO: Variables used by explosion expansion
+		//explosionExpansionInterval = 0.5f;
+		//explosionExpansion = 1;
+
+		explosionCanTrigger = true;
+		explosionSize = power;
+
+		//TODO: Set explosion timer to be dynamic based on power/size
+		//explosionTimer = (float)power / 2;
+
+		//Start the explosion animation
+		ExplosionAnimation();
+
+	}
+
+	void ExplosionAnimation()
+	{
+		//Expand the explosion and fade it out
+		thisRender = GetComponent<MeshRenderer>();
+		Sequence explosionSequence;
+		explosionSequence = DOTween.Sequence();
+		//TODO: Set explosion size/timing based on power
+		// explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionTimer));
+		// explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer / explosionTimer));
+		// explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer / explosionTimer));
+		// explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer / explosionTimer));
+
+		explosionTimer = 0.5f;
+
+		explosionSequence.Join(thisRender.material.DOFade(0.6f, explosionTimer));
+		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer));
+		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer));
+		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer));
+		explosionSequence.Play();
+
+		//Call ExplosionEnd to destroy the explosion when the animation has completed
+		explosionSequence.OnComplete(ExplosionEnding);
+	}
+
+	// 
+
+	void ExplosionEnding()
+	{
+		explosionCanTrigger = false;
+		Sequence explosionEndSequence = DOTween.Sequence();
+		explosionEndSequence.OnComplete(ExplosionEnd);
+		explosionEndSequence.Join(thisRender.material.DOFade(0.0f, 0.2f));
+		explosionEndSequence.Play();
+
+
+	}
+
+	void ExplosionEnd()
+	{
+		//Destroy this explosion
+		Destroy(gameObject);
 	}
 
 	void CreatePowerup(Vector3 position)
@@ -76,5 +123,50 @@ public class ExplosionController : MonoBehaviour
 		//TODO: Make powerups random (including chance for no powerup)
 		Instantiate(powerupBombUpPrefab, position, Quaternion.identity);
 	}
+
+	//TODO: Make this work - expand the explosion in a cross shape
+	// public void ExplosionExpansion()
+	// {
+	// 	StartCoroutine("ExplosionExpansionStart");
+
+	// }
+
+	// public IEnumerator ExplosionExpansionStart()
+	// {
+
+	// 	// //Instantiate the first small plume
+	// 	// Instantiate(explosionPrefab, transform.position + Vector3.Normalize((Vector3.forward + Vector3.right)), Quaternion.identity);
+	// 	// Instantiate(explosionPrefab, transform.position + Vector3.Normalize((Vector3.forward + Vector3.left)), Quaternion.identity);
+	// 	// Instantiate(explosionPrefab, transform.position + Vector3.Normalize((Vector3.back + Vector3.right)), Quaternion.identity);
+	// 	// Instantiate(explosionPrefab, transform.position + Vector3.Normalize((Vector3.forward + Vector3.left)), Quaternion.identity);
+	// 	// yield return new WaitForSeconds(explosionExpansionInterval);
+
+	// 	while (explosionPower > explosionExpansion)
+	// 	{
+	// 		Debug.Log("explosion expansion is: " + explosionExpansion);
+	// 		//TODO: Instantiate multiple explosions in a cross shape - keep doing this until we've reached our explosion power
+	// 		Vector3 leftPosition = new Vector3(transform.position.x - explosionExpansion, transform.position.y, transform.position.z);
+	// 		Vector3 rightPosition = new Vector3(transform.position.x + explosionExpansion, transform.position.y, transform.position.z);
+	// 		Vector3 upPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z + explosionExpansion);
+	// 		Vector3 downPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z - explosionExpansion);
+
+	// 		GameObject[] explosions = new GameObject[4];
+
+	// 		explosions[1] = Instantiate(explosionPrefab, leftPosition, Quaternion.identity);
+	// 		explosions[2] = Instantiate(explosionPrefab, rightPosition, Quaternion.identity);
+	// 		explosions[3] = Instantiate(explosionPrefab, upPosition, Quaternion.identity);
+	// 		explosions[4] = Instantiate(explosionPrefab, downPosition, Quaternion.identity);
+
+	// 		foreach (GameObject explosion in explosions)
+	// 		{
+	// 			ExplosionController explosionScript = (ExplosionController)explosion.GetComponent(typeof(ExplosionController));
+	// 			explosionScript.SetExplosionPower(explosionPower);
+	// 		}
+	// 		//Invoke("ExplosionExpansion", explosionExpansionInterval);
+	// 		explosionExpansion++;
+	// 		yield return new WaitForSeconds(explosionExpansionInterval);
+	// 	}
+
+	// }
 
 }
