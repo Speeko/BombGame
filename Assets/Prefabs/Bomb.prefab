@@ -110,6 +110,7 @@ GameObject:
   - component: {fileID: 2995648111010285581}
   - component: {fileID: 2995648111010285568}
   - component: {fileID: 1493223625376924051}
+  - component: {fileID: 3323058827517602197}
   m_Layer: 0
   m_Name: Bomb
   m_TagString: Bomb
@@ -209,6 +210,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   explosionPrefab: {fileID: 3371031467775059785, guid: 58b65191e06f73f4c9ca7fbe34b9b772, type: 3}
+  bombTimer: 3.5
   bombStartSize: 0
 --- !u!54 &1493223625376924051
 Rigidbody:
@@ -222,10 +224,28 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 0
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
-  m_Constraints: 116
+  m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!143 &3323058827517602197
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2995648111010285578}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 1
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0
+  m_SkinWidth: 0.0001
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &5192450890088556327
 GameObject:
   m_ObjectHideFlags: 0

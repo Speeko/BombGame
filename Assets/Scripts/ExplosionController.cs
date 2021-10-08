@@ -16,6 +16,11 @@ public class ExplosionController : MonoBehaviour
 	private int explosionExpansion;
 	private bool explosionCanTrigger;
 
+	void Awake()
+	{
+		GetGameVars();
+	}
+
 	// Start is called before the first frame update
 	void Start()
 	{
@@ -36,9 +41,17 @@ public class ExplosionController : MonoBehaviour
 
 	}
 
-	//Check collision
-	void OnTriggerEnter(Collider other)
+	void GetGameVars()
 	{
+		GameObject gameController = GameObject.Find("GameController");
+		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
+		explosionSize = gameControllerScript.defaultExplosionSize;
+	}
+
+	//Check collision
+	void OnCollisionEnter(Collision other)
+	{
+		Debug.Log("Explosion collided with: " + other.gameObject);
 		//If the explosion hits a container, destroy it and generate a powerup
 		if (other.gameObject.tag == "Container")
 		{
@@ -65,7 +78,7 @@ public class ExplosionController : MonoBehaviour
 		//explosionExpansion = 1;
 
 		explosionCanTrigger = true;
-		explosionSize = power;
+		explosionSize = explosionSize + power;
 
 		//TODO: Set explosion timer to be dynamic based on power/size
 		//explosionTimer = (float)power / 2;
