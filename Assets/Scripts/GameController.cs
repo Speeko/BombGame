@@ -5,61 +5,53 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
 
+	//Default global vars
 	public float defaultGroundedGravity;
 	public float defaultGravity;
+
+	//Default bomb vars
 	public float defaultBombTimer;
+	public float defaultBombTimeToExplode;
+	public float defaultBombSize;
+	public float defaultBombSlideSpeed;
+
+	//Default explosion vars
 	public float defaultExplosionSize;
+	public float defaultExplosionLifeTime;
+
+	//Default powerup vars
 	public float defaultPowerupLifeTime;
 
-	void awake()
-	{
+	//Default player vars
+	public bool defaultPlayerStartWithKickPowerup;
+	public bool defaultPlayerStartWithThrowPowerup;
+	public int defaultPlayerHealth;
+	public int defaultPlayerMaxHealth;
+	public int defaultPlayerLives;
+	public int defaultPlayerMaxLives;
+	public int defaultPlayerExplosionStrength;
+	public int defaultPlayerMaxExplosionStrength;
+	public int defaultPlayerMoveSpeed;
+	public int defaultPlayerMaxMoveSpeed;
+	public int defaultPlayerBombCount;
+	public int defaultPlayerMaxBombCount;
 
-	}
+	//Default match vars
+	public float matchTime;
+	public float scoreToWin;
+	public string gameType;
+	public bool ghostsEnabled;
+	public bool suddenDeathEnabled;
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		//TODO: Match timer
-		//TODO: Scoring
-
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		//TODO: Container spawns
+
 	}
-
-	void SpawnPlayer(Vector3 spawnPosition)
-	{
-		if (spawnPosition == Vector3.zero)
-		{
-			//TODO: If a spawn position wasn't supplied, we need to pick one
-		}
-	}
-
-	// public float groundedGravity()
-	// {
-	// 	return defaultGroundedGravityVar;
-	// }
-
-	// public float gravity()
-	// {
-	// 	return defaultGravityVar;
-	// }
-
-	// public float defaultBombTimer()
-	// {
-	// 	return defaultBombTimerVar;
-	// }
-
-	// public float defaultExplosionSize()
-	// {
-	// 	return defaultExplosionSizeVar;
-	// }
-
-	// public float defaultPowerupLifeTime()
-	// {
-	// 	return defaultExplosionSizeVar;
-	// }
 }

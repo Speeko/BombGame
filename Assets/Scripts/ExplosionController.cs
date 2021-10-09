@@ -6,7 +6,7 @@ using DG.Tweening;
 public class ExplosionController : MonoBehaviour
 {
 
-	private float explosionTimer;
+	private float explosionLifeTime;
 	public float explosionSize;
 	private MeshRenderer thisRender;
 	public GameObject powerupBombUpPrefab;
@@ -15,6 +15,7 @@ public class ExplosionController : MonoBehaviour
 	private int explosionExpansionCurrent;
 	private int explosionExpansion;
 	private bool explosionCanTrigger;
+	private float explosionStartSize;
 
 	void Awake()
 	{
@@ -46,12 +47,13 @@ public class ExplosionController : MonoBehaviour
 		GameObject gameController = GameObject.Find("GameController");
 		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
 		explosionSize = gameControllerScript.defaultExplosionSize;
+		explosionLifeTime = gameControllerScript.defaultExplosionLifeTime;
 	}
 
 	//Check collision
-	void OnCollisionEnter(Collision other)
+	void OnTriggerEnter(Collider other)
 	{
-		Debug.Log("Explosion collided with: " + other.gameObject);
+		//Debug.Log("Explosion collided with: " + other.gameObject);
 		//If the explosion hits a container, destroy it and generate a powerup
 		if (other.gameObject.tag == "Container")
 		{
@@ -71,7 +73,7 @@ public class ExplosionController : MonoBehaviour
 		// }
 	}
 
-	public void SetExplosionPower(int power)
+	public void SetExplosionPower(int power, float startSize)
 	{
 		//TODO: Variables used by explosion expansion
 		//explosionExpansionInterval = 0.5f;
@@ -79,9 +81,12 @@ public class ExplosionController : MonoBehaviour
 
 		explosionCanTrigger = true;
 		explosionSize = explosionSize + power;
+		explosionStartSize = startSize;
+		transform.localScale = new Vector3(startSize, startSize, startSize);
+
 
 		//TODO: Set explosion timer to be dynamic based on power/size
-		//explosionTimer = (float)power / 2;
+		//explosionLifeTime = (float)power / 2;
 
 		//Start the explosion animation
 		ExplosionAnimation();
@@ -90,22 +95,21 @@ public class ExplosionController : MonoBehaviour
 
 	void ExplosionAnimation()
 	{
+
 		//Expand the explosion and fade it out
 		thisRender = GetComponent<MeshRenderer>();
 		Sequence explosionSequence;
 		explosionSequence = DOTween.Sequence();
 		//TODO: Set explosion size/timing based on power
-		// explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionTimer));
-		// explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer / explosionTimer));
-		// explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer / explosionTimer));
-		// explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer / explosionTimer));
+		// explosionSequence.Join(thisRender.material.DOFade(0.0f, explosionLifeTime));
+		// explosionSequence.Join(transform.DOScaleX(explosionSize, explosionLifeTime / explosionLifeTime));
+		// explosionSequence.Join(transform.DOScaleY(explosionSize, explosionLifeTime / explosionLifeTime));
+		// explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionLifeTime / explosionLifeTime));
 
-		explosionTimer = 0.5f;
-
-		explosionSequence.Join(thisRender.material.DOFade(0.6f, explosionTimer));
-		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionTimer));
-		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionTimer));
-		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionTimer));
+		explosionSequence.Join(thisRender.material.DOFade(0.6f, explosionLifeTime));
+		explosionSequence.Join(transform.DOScaleX(explosionSize, explosionLifeTime));
+		explosionSequence.Join(transform.DOScaleY(explosionSize, explosionLifeTime));
+		explosionSequence.Join(transform.DOScaleZ(explosionSize, explosionLifeTime));
 		explosionSequence.Play();
 
 		//Call ExplosionEnd to destroy the explosion when the animation has completed

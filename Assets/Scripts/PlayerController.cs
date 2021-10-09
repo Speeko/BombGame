@@ -20,34 +20,35 @@ public class PlayerController : MonoBehaviour
 	public GameObject bombPrefab;
 
 	//Set some default player variables
-	private bool isGhost = false;
-	private float invincibilityTime = 3.0f;
-	private float respawnTimer = 3.0f;
-	private bool isInvincible = false;
+	private bool playerIsGhost = false;
+	private float invincibilityTime;
+	private float respawnTimer;
+	private bool playerIsInvincible = false;
 
 	//Set variables for powerups
-	private bool kickPowerup = true; //TODO Change this to false when shipped
-	private bool throwPowerup = false; //TODO Change this to false when shipped
-	private int playerHealth = 2; //TODO: Change to 1 when shipped
-	private int maxPlayerHealth = 4;
-	private int playerLives = 1;
-	private int maxPlayerLives = 2;
-	private int explosionStrength = 1;
-	private int maxExplosionStrength = 6;
-	private int moveSpeed = 1;
-	private int maxMoveSpeed = 4;
-	private int maxBombCount = 2;
-	private int maxTotalBombs = 8;
+	private bool playerHasKickPowerup; //TODO Change this to false when shipped
+	private bool playerHasThrowPowerup; //TODO Change this to false when shipped
+	private int playerHealth; //TODO: Change to 1 when shipped
+	private int playerMaxHealth;
+	private int playerLives;
+	private int playerMaxLives;
+	private int playerExplosionStrength;
+	private int playerMaxExplosionStrength;
+	private int playerMoveSpeed;
+	private int playerMaxMoveSpeed;
+	private int playerBombCount;
+	private int playerMaxBombCount;
 
 	//Set variables to handle bombs
 	private GameObject lastBomb;
 	private BombController lastBombScript;
 	public List<GameObject> myBombsList;
 	public List<string> myPowerupList = new List<string>();
-	private int remainingBombCount;
-	private bool canKickBomb = true;
+	private int playerRemainingBombCount;
+	private bool playerCanKickBomb = true;
 	private BombController otherBombScript;
 	private GameObject lastKickedBomb;
+	private float bombSize;
 
 	//Set movement variables
 	private bool playerHasControl = true;
@@ -80,8 +81,8 @@ public class PlayerController : MonoBehaviour
 	float gravity;
 
 
-	public GameObject gameController;
-	public GameController gameControllerScript;
+	private GameObject gameController;
+	private GameController gameControllerScript;
 
 	private Vector3 lastBombExitPosition;
 
@@ -103,22 +104,38 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	void GetGravity()
+	void GetGameVars()
 	{
 		GameObject gameController = GameObject.Find("GameController");
 		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
 		groundedGravity = gameControllerScript.defaultGroundedGravity;
 		gravity = gameControllerScript.defaultGravity;
+		bombSize = gameControllerScript.defaultBombSize;
+
+		playerHasKickPowerup = gameControllerScript.defaultPlayerStartWithKickPowerup;
+		playerHasThrowPowerup = gameControllerScript.defaultPlayerStartWithThrowPowerup;
+		playerHealth = gameControllerScript.defaultPlayerHealth;
+		playerMaxHealth = gameControllerScript.defaultPlayerMaxHealth;
+		playerLives = gameControllerScript.defaultPlayerLives;
+		playerMaxLives = gameControllerScript.defaultPlayerMaxLives;
+		playerExplosionStrength = gameControllerScript.defaultPlayerExplosionStrength;
+		playerMaxExplosionStrength = gameControllerScript.defaultPlayerMaxExplosionStrength;
+		playerMoveSpeed = gameControllerScript.defaultPlayerMoveSpeed;
+		playerMaxMoveSpeed = gameControllerScript.defaultPlayerMaxMoveSpeed;
+		playerBombCount = gameControllerScript.defaultPlayerBombCount;
+		playerMaxBombCount = gameControllerScript.defaultPlayerBombCount;
 
 	}
 
 	void OnMovementInput(InputAction.CallbackContext context)
 	{
 
+		//TODO: Currently this is VERY touchy - making it difficult to face a diagonal direction without movement. Need a way to fix.
+
 		currentMovementInput = context.ReadValue<Vector2>();
 
-		currentMovement.x = currentMovementInput.x;
-		currentMovement.z = currentMovementInput.y;
+		currentMovement.x = currentMovementInput.x * playerMoveSpeed;
+		currentMovement.z = currentMovementInput.y * playerMoveSpeed;
 
 		//currentMovement = Vector3.Normalize(currentMovement);
 		currentMovementDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
@@ -127,8 +144,7 @@ public class PlayerController : MonoBehaviour
 		if (currentMovementInput.x != 0 || currentMovementInput.y != 0)
 		{
 			isMovementPressed = true;
-			lastMovementDirection = currentMovementDirection;
-
+			lastMovementDirection = new Vector3(currentMovementInput.x, 0.0f, currentMovementInput.y);
 		}
 		else
 		{
@@ -151,7 +167,7 @@ public class PlayerController : MonoBehaviour
 	void Start()
 	{
 
-		GetGravity();
+		GetGameVars();
 
 		//Get some GameObject components for use later
 		thisRb = GetComponent<Rigidbody>();
@@ -162,7 +178,7 @@ public class PlayerController : MonoBehaviour
 		//TODO: Player explosion strength
 
 		//Set our remaining bombs to our starting bomb count
-		remainingBombCount = maxBombCount;
+		playerRemainingBombCount = playerBombCount;
 
 		//TODO: Player as ghost
 		//TODO: Player death
@@ -199,7 +215,7 @@ public class PlayerController : MonoBehaviour
 		// if (playerHasControl == true)
 		// {
 		// 	//Apply the player input to the character
-		// 	transform.Translate(playerMovementDirection * (moveSpeed * Time.deltaTime), Space.World);
+		// 	transform.Translate(playerMovementDirection * (playerMoveSpeed * Time.deltaTime), Space.World);
 
 		// }
 
@@ -211,8 +227,14 @@ public class PlayerController : MonoBehaviour
 		if (playerHasControl == true)
 		{
 			lastMovementInput = currentMovementInput;
-			characterController.Move(currentMovement * moveSpeed * Time.deltaTime);
-			transform.forward = lastMovementDirection;
+			characterController.Move(currentMovement * Time.deltaTime);
+
+			//Rotate the player towards the movement direction
+			float rotationSpeed = 720;
+			Quaternion toRotation = Quaternion.LookRotation(lastMovementDirection, Vector3.up);
+			transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
+
+			//transform.forward = lastMovementDirection;
 		}
 
 
@@ -221,7 +243,7 @@ public class PlayerController : MonoBehaviour
 		healthTestText = healthTestTextGameObject.GetComponent<Text>();
 		healthTestText.text = "health: " + playerHealth + "\n" + "lives: " + playerLives;
 		statsTestText = statsTestTextGameObject.GetComponent<Text>();
-		statsTestText.text = "bombs: " + maxBombCount + "\n" + "speed: " + moveSpeed + "\n" + "explosion: " + explosionStrength + "\n" + "CanKick: " + kickPowerup + "\n" + "CanThrow: " + throwPowerup;
+		statsTestText.text = "bombs: " + playerBombCount + "\n" + "speed: " + playerMoveSpeed + "\n" + "explosion: " + playerExplosionStrength + "\n" + "CanKick: " + playerHasKickPowerup + "\n" + "CanThrow: " + playerHasThrowPowerup;
 	}
 
 	void ApplyGravity()
@@ -296,8 +318,6 @@ public class PlayerController : MonoBehaviour
 
 			if (lastKickedBombScript.IsBombSliding() == true)
 			{
-				Rigidbody lastKickedBombRb = lastKickedBomb.GetComponent<Rigidbody>();
-				lastKickedBombRb.velocity = Vector3.zero;
 				lastKickedBombScript.StopBombSliding();
 			}
 		}
@@ -312,23 +332,28 @@ public class PlayerController : MonoBehaviour
 
 	void DropBomb()
 	{
+
+		//Set the size of the bomb we're dropping
+
+
+
 		//TODO: Move the bomb drop logic here to support bombs being dropped by a curse rather than player input
 		//Check if we have any bombs left
-		if (remainingBombCount > 0)
+		if (playerRemainingBombCount > 0)
 		{
 			//Spawn bomb
-			lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, 0.75f, transform.position.z), Quaternion.identity);
+			lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, transform.position.y - (bombSize / 2), transform.position.z), Quaternion.identity);
 			//Add this bomb to our list of bombs currently active
 			myBombsList.Add(lastBomb);
 			//Tell the bomb who its daddy is
 			lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
 			lastBombScript.SetParent(gameObject);
 			//Set the bomb's explosion strength to our current explosion strength
-			lastBombScript.SetBombExplosionPower(explosionStrength);
+			lastBombScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
 			//Start the fuse of the bomb
 			lastBombScript.SetFuse();
 			//Decrement our remaining bombs by 1
-			remainingBombCount--;
+			playerRemainingBombCount--;
 		}
 	}
 
@@ -376,22 +401,19 @@ public class PlayerController : MonoBehaviour
 	void OnControllerColliderHit(ControllerColliderHit other)
 	{
 
-		//Find a way to not kick our last bomb on the same frame we leave it
-		if (other.moveDirection.y < currentMovementDirection.y)
-		{
-			return;
-		}
+
+	}
+
+	void OnTriggerEnter(Collider other)
+	{
 
 		//Colliding with a bomb
 		if (other.gameObject.tag == "Bomb")
 		{
 
 			//Check we're not hitting our own bomb
-			if (other.gameObject != lastBomb && transform.position != lastBombExitPosition)
+			if (other.gameObject != lastBomb)
 			{
-				Debug.Log("kicking this bomb at position: " + transform.position);
-				Debug.Log("we stepped off our last bomb at position: " + lastBombExitPosition);
-
 				//TODO: Check if the other bomb was sliding when it hits us, if so become stunned
 				BombController incomingBomb = (BombController)other.gameObject.GetComponent(typeof(BombController));
 				if (incomingBomb.IsBombSliding() == true)
@@ -406,10 +428,6 @@ public class PlayerController : MonoBehaviour
 				}
 			}
 		}
-	}
-
-	void OnTriggerEnter(Collider other)
-	{
 
 		//Colliding with a powerup
 		if (other.gameObject.tag == "Powerup")
@@ -451,17 +469,14 @@ public class PlayerController : MonoBehaviour
 			if (lastBomb = other.gameObject)
 			{
 				lastBomb = null;
-
-				//TODO: This is extremely hacky, find a better way
-				//Save the position we were at when we left our bomb (so we can use it later to not immediately trigger a collision-kick)
-				lastBombExitPosition = transform.position;
+				Debug.Log("Stepped off my last bomb");
 			}
 		}
 	}
 
 	public void PlayerDamage()
 	{
-		if (isInvincible == false)
+		if (playerIsInvincible == false)
 		{
 			if (playerHealth > 1)
 			{
@@ -492,8 +507,8 @@ public class PlayerController : MonoBehaviour
 			PlayerRespawn(deathPosition);
 		}
 
-		throwPowerup = false;
-		kickPowerup = false;
+		playerHasThrowPowerup = false;
+		playerHasKickPowerup = false;
 		//TODO: Shoot out powerups in different directions
 
 	}
@@ -501,7 +516,7 @@ public class PlayerController : MonoBehaviour
 	void PlayerInvincible(int time)
 	{
 		//Set player to an invincible state and rapidly fade in/out
-		isInvincible = true;
+		playerIsInvincible = true;
 
 		float minFade = 0.1f;
 		float maxFade = 1.0f;
@@ -519,7 +534,7 @@ public class PlayerController : MonoBehaviour
 	void PlayerInvincibleEnd()
 	{
 		//Invincibility is ending, reset things
-		isInvincible = false;
+		playerIsInvincible = false;
 		thisRender.material.DOFade(1.0f, 0.0f).Play();
 
 	}
@@ -546,9 +561,9 @@ public class PlayerController : MonoBehaviour
 	{
 		// UpdateEventTestText("explosion up");
 		// //EXPLOSION UP
-		// if (explosionStrength < maxExplosionStrength)
+		// if (playerExplosionStrength < playerMaxExplosionStrength)
 		// {
-		// 	explosionStrength++;
+		// 	playerExplosionStrength++;
 		// }
 
 		playerHealth--;
@@ -565,10 +580,10 @@ public class PlayerController : MonoBehaviour
 			UpdateEventTestText("bomb up");
 			//BOMB UP
 			//Increase our bomb count if we're not at the max already
-			if (maxBombCount < maxTotalBombs)
+			if (playerBombCount < playerMaxBombCount)
 			{
-				maxBombCount++;
-				remainingBombCount++;
+				playerBombCount++;
+				playerRemainingBombCount++;
 			}
 		}
 
@@ -576,9 +591,9 @@ public class PlayerController : MonoBehaviour
 		{
 			UpdateEventTestText("speed up");
 			//SPEED UP
-			if (moveSpeed < maxMoveSpeed)
+			if (playerMoveSpeed < playerMaxMoveSpeed)
 			{
-				moveSpeed++;
+				playerMoveSpeed++;
 			}
 		}
 
@@ -586,9 +601,9 @@ public class PlayerController : MonoBehaviour
 		{
 			UpdateEventTestText("explosion up");
 			//EXPLOSION UP
-			if (explosionStrength < maxExplosionStrength)
+			if (playerExplosionStrength < playerMaxExplosionStrength)
 			{
-				explosionStrength++;
+				playerExplosionStrength++;
 			}
 		}
 
@@ -596,7 +611,7 @@ public class PlayerController : MonoBehaviour
 		{
 			UpdateEventTestText("health up");
 			//HEALTH UP
-			if (playerHealth < maxPlayerHealth)
+			if (playerHealth < playerMaxHealth)
 			{
 				playerHealth++;
 			}
@@ -606,7 +621,7 @@ public class PlayerController : MonoBehaviour
 		{
 			UpdateEventTestText("lives up");
 			//LIVES UP
-			if (playerLives < maxPlayerLives)
+			if (playerLives < playerMaxLives)
 			{
 				playerLives++;
 			}
@@ -616,14 +631,14 @@ public class PlayerController : MonoBehaviour
 		{
 			UpdateEventTestText("kick power");
 			//KICK POWER
-			kickPowerup = true;
+			playerHasKickPowerup = true;
 		}
 
 		if (powerupType == "ThrowPower")
 		{
 			UpdateEventTestText("throw power");
 			//THROW POWER
-			throwPowerup = true;
+			playerHasThrowPowerup = true;
 		}
 
 		//Remove the powerup we collected
@@ -637,27 +652,30 @@ public class PlayerController : MonoBehaviour
 		if (myBombsList.Contains(bomb))
 		{
 			myBombsList.Remove(bomb);
-			remainingBombCount++;
+			playerRemainingBombCount++;
 		}
 	}
 
 	void KickBomb(GameObject bomb)
 	{
-		if (kickPowerup == true)
+		if (playerHasKickPowerup == true)
 		{
 
-			if (canKickBomb == true)
+			if (playerCanKickBomb == true)
 			{
+
+				//lastBomb = null;
 
 				otherBombScript = (BombController)bomb.GetComponent(typeof(BombController));
 
 				//Check if this bomb can be kicked
 				if (otherBombScript.IsBombSliding() == false)
 				{
+					//Vector3 bombKickDirection = lastMovementDirection;
 					//Take away control while we kick the bomb
 					StartCoroutine(DoKickBomb(bomb, lastMovementDirection, kickAnimationTime));
 					playerHasControl = false;
-					canKickBomb = false;
+					playerCanKickBomb = false;
 					//Start playing the bomb kick animation
 
 					//TODO: Use DOTween to animate the kick
@@ -682,16 +700,17 @@ public class PlayerController : MonoBehaviour
 
 			//Kick the bomb in the direction we're facing
 			//Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
-			//otherBombRb.AddForce(direction * (moveSpeed * 100));
+			//otherBombRb.AddForce(direction * (playerMoveSpeed * 100));
 
 			//Set the bomb we kicked to a sliding state
 			//otherBombScript.StartBombSliding();
-			otherBombScript.BombKicked(lastMovementDirection);
+			Vector3 bombKickDirection = new Vector3(direction.x, transform.position.y - (bombSize / 2), direction.z);
+			otherBombScript.BombKicked(bombKickDirection);
 		}
 
 		//Bomb has been kicked, give us back control
 		playerHasControl = true;
-		canKickBomb = true;
+		playerCanKickBomb = true;
 
 		//Save the last bomb we kicked so we can stop it with an input
 		lastKickedBomb = bomb;
