@@ -19,9 +19,9 @@ public class PowerupController : MonoBehaviour
 
 	void GetGameVars()
 	{
-		// GameObject gameController = GameObject.Find("GameController");
-		// GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
-		// powerupLifeTime = gameControllerScript.defaultPowerupLifeTime;
+		GameObject gameController = GameObject.Find("GameController");
+		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
+		powerupLifeTime = gameControllerScript.defaultPowerupLifeTime;
 	}
 
 	// Start is called before the first frame update

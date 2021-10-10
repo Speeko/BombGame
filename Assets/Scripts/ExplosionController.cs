@@ -50,28 +50,28 @@ public class ExplosionController : MonoBehaviour
 		explosionLifeTime = gameControllerScript.defaultExplosionLifeTime;
 	}
 
-	//Check collision
-	void OnTriggerEnter(Collider other)
-	{
-		//Debug.Log("Explosion collided with: " + other.gameObject);
-		//If the explosion hits a container, destroy it and generate a powerup
-		if (other.gameObject.tag == "Container")
-		{
-			//Create a powerup (including chance for no powerup)
-			CreatePowerup(other.gameObject.transform.position);
-			//TODO: Add some kind of animation for destroying this (like a puff of smoke)
-			Destroy(other.gameObject);
-		}
+	// //Check collision
+	// void OnTriggerEnter(Collider other)
+	// {
+	// 	//Debug.Log("Explosion collided with: " + other.gameObject);
+	// 	//If the explosion hits a container, destroy it and generate a powerup
+	// 	if (other.gameObject.tag == "Container")
+	// 	{
+	// 		//Create a powerup (including chance for no powerup)
+	// 		CreatePowerup(other.gameObject.transform.position);
+	// 		//TODO: Add some kind of animation for destroying this (like a puff of smoke)
+	// 		Destroy(other.gameObject);
+	// 	}
 
-		// This was moved to PlayerController
-		// //TODO: collision with player cause death
-		// if (other.gameObject.tag == "Player")
-		// {
-		// 	//TODO: Kill player
-		// 	PlayerController player = (PlayerController)other.gameObject.GetComponent(typeof(PlayerController));
-		// 	player.PlayerDamage("Explosion");
-		// }
-	}
+	// 	// This was moved to PlayerController
+	// 	// //TODO: collision with player cause death
+	// 	// if (other.gameObject.tag == "Player")
+	// 	// {
+	// 	// 	//TODO: Kill player
+	// 	// 	PlayerController player = (PlayerController)other.gameObject.GetComponent(typeof(PlayerController));
+	// 	// 	player.PlayerDamage("Explosion");
+	// 	// }
+	// }
 
 	public void SetExplosionPower(int power, float startSize)
 	{

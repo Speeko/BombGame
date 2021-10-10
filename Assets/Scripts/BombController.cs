@@ -26,6 +26,9 @@ public class BombController : MonoBehaviour
 	private Sequence bombExplodeSequence;
 
 	private Vector3 currentMovement;
+	private float storedMovementX;
+	private float storedMovementZ;
+	private Vector3 storedMovementDirection;
 
 	float groundedGravity;
 	float gravity;
@@ -65,6 +68,24 @@ public class BombController : MonoBehaviour
 	void Update()
 	{
 
+		Debug.DrawLine(transform.position, transform.position + Vector3.forward, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z) + Vector3.forward, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z) + Vector3.forward, Color.red, 0.01f);
+
+		Debug.DrawLine(transform.position, transform.position + Vector3.back, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z) + Vector3.back, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z) + Vector3.back, Color.red, 0.01f);
+
+
+		Debug.DrawLine(transform.position, transform.position + Vector3.left, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))), new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))) + Vector3.left, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))), new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))) + Vector3.left, Color.red, 0.01f);
+
+
+		Debug.DrawLine(transform.position, transform.position + Vector3.right, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))), new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))) + Vector3.right, Color.red, 0.01f);
+		Debug.DrawLine(new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))), new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))) + Vector3.right, Color.red, 0.01f);
+
 		//ApplyGravity();
 
 		if (bombSliding == true)
@@ -78,6 +99,11 @@ public class BombController : MonoBehaviour
 
 			transform.position = new Vector3(newPosX, transform.position.y, newPosZ);
 
+			if (new Vector3(storedMovementX, 0.0f, storedMovementZ) != Vector3.zero)
+			{
+				CheckForCollisionExit();
+			}
+
 			//transform.position = new Vector3(3, 3, 3);
 		}
 
@@ -86,6 +112,119 @@ public class BombController : MonoBehaviour
 
 
 		//TODO: variable timers
+
+	}
+
+	void CheckForCollisionExit()
+	{
+
+		//TODO: This code sucks so much, make it nicer
+		RaycastHit collisionPoint;
+
+		//Left
+		if (storedMovementX < 0.0f)
+		{
+
+			if
+				(Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))), Vector3.left, out collisionPoint, 0.6f)
+				|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))), Vector3.left, out collisionPoint, 0.6f)
+				|| Physics.Raycast(transform.position, Vector3.left, out collisionPoint, 1.0f))
+			{
+				//Debug, still hitting somthing, check if its a wall
+				Debug.DrawLine(transform.position, transform.position + Vector3.left, Color.magenta, 1.0f);
+
+				if (collisionPoint.collider.gameObject.tag != "Wall")
+				{
+					//Nothing is colliding, re-apply the stored momentum
+					currentMovement.x = storedMovementX;
+					storedMovementX = 0.0f;
+				}
+			}
+			else
+			{
+				currentMovement.x = storedMovementX;
+				storedMovementX = 0.0f;
+			}
+		}
+
+		//Right
+		if (storedMovementX > 0.0f)
+		{
+
+			if
+				(Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z - (transform.localScale.z / 2))), Vector3.right, out collisionPoint, 0.6f)
+				|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z + (transform.localScale.z / 2))), Vector3.right, out collisionPoint, 0.6f)
+				|| Physics.Raycast(transform.position, Vector3.right, out collisionPoint, 1.0f))
+			{
+				//Debug, still hitting somthing
+				Debug.DrawLine(transform.position, transform.position + Vector3.right, Color.magenta, 1.0f);
+				if (collisionPoint.collider.gameObject.tag != "Wall")
+				{
+					//Nothing is colliding, re-apply the stored momentum
+					currentMovement.x = storedMovementX;
+					storedMovementX = 0.0f;
+				}
+			}
+			else
+			{
+				currentMovement.x = storedMovementX;
+				storedMovementX = 0.0f;
+			}
+		}
+
+		//Back/down
+		if (storedMovementZ > 0.0f)
+		{
+
+			if
+				(Physics.Raycast(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.forward, out collisionPoint, 0.6f)
+				|| Physics.Raycast(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.forward, out collisionPoint, 0.6f)
+				|| Physics.Raycast(transform.position, Vector3.forward, out collisionPoint, 1.0f))
+			{
+				//Debug, still hitting somthing
+				Debug.DrawLine(transform.position, transform.position + Vector3.back, Color.magenta, 1.0f);
+				if (collisionPoint.collider.gameObject.tag != "Wall")
+				{
+					//Nothing is colliding, re-apply the stored momentum
+					currentMovement.z = storedMovementZ;
+					storedMovementZ = 0.0f;
+				}
+			}
+			else
+			{
+				//Nothing is colliding, re-apply the stored momentum
+				currentMovement.z = storedMovementZ;
+				storedMovementZ = 0.0f;
+			}
+
+		}
+
+		//Forward/Up
+		if (storedMovementZ < 0.0f)
+		{
+
+			if
+				(Physics.Raycast(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.back, out collisionPoint, 0.6f)
+				|| Physics.Raycast(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.back, out collisionPoint, 0.6f)
+				|| Physics.Raycast(transform.position, Vector3.back, out collisionPoint, 1.0f))
+			{
+				//Debug, still hitting somthing
+				Debug.DrawLine(transform.position, transform.position + Vector3.back, Color.magenta, 1.0f);
+				if (collisionPoint.collider.gameObject.tag != "Wall")
+				{
+					//Nothing is colliding, re-apply the stored momentum
+					currentMovement.z = storedMovementZ;
+					storedMovementZ = 0.0f;
+				}
+			}
+			else
+			{
+				//Nothing is colliding, re-apply the stored momentum
+				currentMovement.z = storedMovementZ;
+				storedMovementZ = 0.0f;
+			}
+		}
+
 
 	}
 
@@ -204,23 +343,117 @@ public class BombController : MonoBehaviour
 
 	void OnTriggerEnter(Collider other)
 	{
+
 		//TODO: Stop bomb if it hits a wall unless on an angle
 		if (other.gameObject.tag == "Wall" || other.gameObject.tag == "Container")
 		{
-			//TODO: Handle bomb sliding direction
-			StopBombSliding();
+			RaycastHit collisionPoint;
+
+			//TODO: Seems like we're shooting too many damn rays. Must be a better way to do this.
+
+			//Check we're not already storing some movement for Z
+			if (storedMovementZ == 0.0f)
+			{
+				//Up
+				if
+					(Physics.Raycast(transform.position, Vector3.forward, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.forward, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.forward, out collisionPoint, 1.0f))
+				{
+					if (collisionPoint.collider.gameObject.tag == "Wall")
+					{
+
+						//Store the current movement if we're moving on an angle (so it can be re-applied on exiting collision)
+						if (currentMovement.x != 0.0f)
+						{
+							storedMovementZ = currentMovement.z;
+							Debug.Log("Hit above us, storing Z movement for later");
+						}
+
+						currentMovement.z = 0.0f;
+						Debug.DrawLine(transform.position, transform.position + Vector3.forward, Color.red, 1.0f);
+						//Debug.Log("There was something above me");
+					}
+				}
+
+				//Down
+				else if
+					(Physics.Raycast(transform.position, Vector3.back, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x + (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.back, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x - (transform.localScale.x / 2), transform.position.y, transform.position.z), Vector3.back, out collisionPoint, 1.0f))
+				{
+					if (collisionPoint.collider.gameObject.tag == "Wall")
+					{
+						if (currentMovement.x != 0.0f)
+						{
+							storedMovementZ = currentMovement.z;
+							Debug.Log("Hit below us, storing Z movement for later");
+						}
+
+						currentMovement.z = 0.0f;
+						Debug.DrawLine(transform.position, transform.position + Vector3.back, Color.red, 1.0f);
+						//Debug.Log("There was something below me");
+					}
+				}
+			}
+
+			if (storedMovementX == 0.0f)
+			{
+
+				//Left
+				if
+					(Physics.Raycast(transform.position, Vector3.left, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z + transform.localScale.z / 2)), Vector3.left, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z - transform.localScale.z / 2)), Vector3.left, out collisionPoint, 1.0f))
+				{
+					if (collisionPoint.collider.gameObject.tag == "Wall")
+					{
+						//Left
+						if (currentMovement.z != 0.0f)
+						{
+							storedMovementX = currentMovement.x;
+							Debug.Log("Hit left of us, storing X movement for later");
+						}
+
+						currentMovement.x = 0.0f;
+						Debug.DrawLine(transform.position, transform.position + Vector3.left, Color.red, 1.0f);
+						//Debug.Log("There was something left of me");
+					}
+				}
+
+				//Right
+				else if
+					(Physics.Raycast(transform.position, Vector3.right, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z + transform.localScale.z / 2)), Vector3.right, out collisionPoint, 1.0f)
+					|| Physics.Raycast(new Vector3(transform.position.x, transform.position.y, (transform.position.z - transform.localScale.z / 2)), Vector3.right, out collisionPoint, 1.0f))
+				{
+					if (collisionPoint.collider.gameObject.tag == "Wall")
+					{
+						//Right
+						if (currentMovement.z != 0.0f)
+						{
+							storedMovementX = currentMovement.x;
+							Debug.Log("Hit right of us, storing X movement for later");
+						}
+
+						currentMovement.x = 0.0f;
+						Debug.DrawLine(transform.position, transform.position + Vector3.right, Color.red, 1.0f);
+						//Debug.Log("There was something right of me");
+					}
+				}
+			}
+
+
 		}
 
 		//Colliding with another bomb
 		if (other.gameObject.tag == "Bomb" && other.gameObject != gameObject)
 		{
 
-
 			//If the other bomb is not sliding, we must push it
 			BombController otherBombScript = (BombController)other.gameObject.GetComponent(typeof(BombController));
 			if (otherBombScript.IsBombSliding() == false)
 			{
-
 
 				//TODO: Push the other bomb
 				//Use vector3.reflect to reverse the normalised velocity of this bomb

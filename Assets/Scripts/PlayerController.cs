@@ -130,16 +130,13 @@ public class PlayerController : MonoBehaviour
 	void OnMovementInput(InputAction.CallbackContext context)
 	{
 
-		//TODO: Currently this is VERY touchy - making it difficult to face a diagonal direction without movement. Need a way to fix.
 
 		currentMovementInput = context.ReadValue<Vector2>();
 
 		currentMovement.x = currentMovementInput.x * playerMoveSpeed;
 		currentMovement.z = currentMovementInput.y * playerMoveSpeed;
 
-		//currentMovement = Vector3.Normalize(currentMovement);
 		currentMovementDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
-		//currentMovementDirection = Vector3.Normalize(currentMovementDirection);
 
 		if (currentMovementInput.x != 0 || currentMovementInput.y != 0)
 		{
@@ -234,7 +231,7 @@ public class PlayerController : MonoBehaviour
 			Quaternion toRotation = Quaternion.LookRotation(lastMovementDirection, Vector3.up);
 			transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
 
-			//transform.forward = lastMovementDirection;
+			transform.forward = lastMovementDirection;
 		}
 
 
@@ -401,7 +398,6 @@ public class PlayerController : MonoBehaviour
 	void OnControllerColliderHit(ControllerColliderHit other)
 	{
 
-
 	}
 
 	void OnTriggerEnter(Collider other)
@@ -464,12 +460,12 @@ public class PlayerController : MonoBehaviour
 	void OnTriggerExit(Collider other)
 	{
 		//Clear the lastBomb if we step off it
+		//TODO: This is getting called twice for some reason - fix it
 		if (other.gameObject.tag == "Bomb")
 		{
 			if (lastBomb = other.gameObject)
 			{
 				lastBomb = null;
-				Debug.Log("Stepped off my last bomb");
 			}
 		}
 	}
@@ -566,7 +562,7 @@ public class PlayerController : MonoBehaviour
 		// 	playerExplosionStrength++;
 		// }
 
-		playerHealth--;
+		playerExplosionStrength++;
 
 	}
 
@@ -679,10 +675,12 @@ public class PlayerController : MonoBehaviour
 					//Start playing the bomb kick animation
 
 					//TODO: Use DOTween to animate the kick
-					// Sequence bombKickAnim;
-					// bombKickAnim = DoTween.Sequence();
-					// bombKickAnim.Join(transform.DOLocalRotate(,))
-					// explosionSequence.OnComplete(ExplosionEnd);
+					Sequence bombKickAnim;
+					bombKickAnim = DOTween.Sequence();
+					bombKickAnim.Join(transform.DORotate(new Vector3(3.0f, 3.0f, 3.0f), kickAnimationTime / 3));
+					bombKickAnim.Join(transform.DORotate(new Vector3(-3.0f, -3.0f, -3.0f), kickAnimationTime / 3));
+					bombKickAnim.Join(transform.DORotate(new Vector3(0.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					bombKickAnim.Play();
 				}
 
 			}

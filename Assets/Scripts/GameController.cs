@@ -6,23 +6,28 @@ public class GameController : MonoBehaviour
 {
 
 	//Default global vars
+	[Header("Global")]
 	public float defaultGroundedGravity;
 	public float defaultGravity;
 
 	//Default bomb vars
+	[Header("Bombs")]
 	public float defaultBombTimer;
 	public float defaultBombTimeToExplode;
 	public float defaultBombSize;
 	public float defaultBombSlideSpeed;
 
 	//Default explosion vars
+	[Header("Explosions")]
 	public float defaultExplosionSize;
 	public float defaultExplosionLifeTime;
 
 	//Default powerup vars
+	[Header("Powerups")]
 	public float defaultPowerupLifeTime;
 
 	//Default player vars
+	[Header("Player")]
 	public bool defaultPlayerStartWithKickPowerup;
 	public bool defaultPlayerStartWithThrowPowerup;
 	public int defaultPlayerHealth;
@@ -37,6 +42,7 @@ public class GameController : MonoBehaviour
 	public int defaultPlayerMaxBombCount;
 
 	//Default match vars
+	[Header("Match")]
 	public float matchTime;
 	public float scoreToWin;
 	public string gameType;
