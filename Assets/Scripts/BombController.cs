@@ -31,12 +31,13 @@ public class BombController : MonoBehaviour
 	private float storedMovementX;
 	private float storedMovementZ;
 	private Vector3 storedMovementDirection;
-	float groundedGravity;
-	float gravity;
-	bool bombGrounded;
-	bool bombKickIsAngled;
-	List<string> collisionLocationList = new List<string>();
-	List<string> collisionTagList;
+	private float groundedGravity;
+	private float gravity;
+	private bool bombGrounded;
+	private bool bombKickIsAngled;
+	private List<string> collisionLocationList = new List<string>();
+	private List<string> collisionTagList;
+	private GameObject bombThatPushedMe;
 
 	#endregion
 
@@ -250,7 +251,7 @@ public class BombController : MonoBehaviour
 
 		bombSliding = true;
 		currentMovement = new Vector3(direction.x, 0.0f, direction.z);
-		Debug.Log("I've been pushed and I'm moving to: " + currentMovement);
+		//Debug.Log("I've been pushed and I'm moving to: " + currentMovement);
 
 		if ((currentMovement.x == 0.0f && currentMovement.z != 0.0f) || (currentMovement.x != 0.0f && currentMovement.z == 0.0f))
 		{
@@ -346,7 +347,7 @@ public class BombController : MonoBehaviour
 
 		//CheckWallCollision(transform.position, transform.localScale.x);
 
-		//Debug.Log(currentMovement);
+		////Debug.Log(currentMovement);
 
 		if (currentMovement.x != 0.0f || currentMovement.z != 0.0f)
 		{
@@ -355,28 +356,28 @@ public class BombController : MonoBehaviour
 			if (bombKickIsAngled == false)
 			{
 				//We're moving straight
-				Debug.Log("Straight bomb kick detected");
+				//Debug.Log("Straight bomb kick detected");
 
 				//Check if we've hit any complete stops and stop the bomb
 				if (currentMovement.x < 0.0f && collisionLocationList.Contains("Left"))
 				{
 					StopBombSliding();
-					Debug.Log("Hit a wall on the LEFT, stopping sliding");
+					//Debug.Log("Hit a wall on the LEFT, stopping sliding");
 				}
 				else if (currentMovement.x > 0.0f && collisionLocationList.Contains("Right"))
 				{
 					StopBombSliding();
-					Debug.Log("Hit a wall on the RIGHT, stopping sliding");
+					//Debug.Log("Hit a wall on the RIGHT, stopping sliding");
 				}
 				else if (currentMovement.z < 0.0f && collisionLocationList.Contains("Down"))
 				{
 					StopBombSliding();
-					Debug.Log("Hit a wall on the DOWN, stopping sliding");
+					//Debug.Log("Hit a wall on the DOWN, stopping sliding");
 				}
 				else if (currentMovement.z > 0.0f && collisionLocationList.Contains("Up"))
 				{
 					StopBombSliding();
-					Debug.Log("Hit a wall on the UP, stopping sliding");
+					//Debug.Log("Hit a wall on the UP, stopping sliding");
 				}
 				else
 				{
@@ -388,8 +389,8 @@ public class BombController : MonoBehaviour
 			else
 			{
 				//We're moving on an angle
-				//Debug.Log("Angled bomb kick detected");
-
+				////Debug.Log("Angled bomb kick detected");
+				UnStuckDiagonals();
 
 				if (storedMovementX == 0.0f || storedMovementZ == 0.0f)
 				{
@@ -400,7 +401,7 @@ public class BombController : MonoBehaviour
 						{
 							storedMovementX = currentMovement.x;
 							currentMovement.x = 0.0f;
-							Debug.Log("Hit a wall on the LEFT, storing momentum");
+							//Debug.Log("Hit a wall on the LEFT, storing momentum");
 						}
 					}
 
@@ -410,7 +411,7 @@ public class BombController : MonoBehaviour
 						{
 							storedMovementX = currentMovement.x;
 							currentMovement.x = 0.0f;
-							Debug.Log("Hit a wall on the RIGHT, storing momentum");
+							//Debug.Log("Hit a wall on the RIGHT, storing momentum");
 						}
 					}
 
@@ -421,7 +422,7 @@ public class BombController : MonoBehaviour
 						{
 							storedMovementZ = currentMovement.z;
 							currentMovement.z = 0.0f;
-							Debug.Log("Hit a wall on the DOWN, storing momentum");
+							//Debug.Log("Hit a wall on the DOWN, storing momentum");
 						}
 					}
 
@@ -431,7 +432,7 @@ public class BombController : MonoBehaviour
 						{
 							storedMovementZ = currentMovement.z;
 							currentMovement.z = 0.0f;
-							Debug.Log("Hit a wall on the UP, storing momentum");
+							//Debug.Log("Hit a wall on the UP, storing momentum");
 						}
 					}
 				}
@@ -439,21 +440,20 @@ public class BombController : MonoBehaviour
 			}
 		}
 
-		if (collisionLocationList.Count >= 2)
+		if (collisionLocationList.Count >= 3)
 		{
 			//If we're colliding at two points, we should stop the bomb
 			//TOD: Make this less strict so we can slide over a small gap
 			StopBombSliding();
-			Debug.Log("Hit two collisions at once, i'm stuck. Stoppping bomb.");
+			//Debug.Log("Hit three or more collisions at once, i'm stuck. Stoppping bomb.");
 		}
-
-
-
 
 	}
 
 	void UnStuckDiagonals() //Jiggles the bomb out of any diagonal collisions
 	{
+
+		//Debug.Log("Unstucking diagonals");
 
 		float unstuckSize = transform.localScale.y / 5;
 		//float unstuckSize = 1;
@@ -465,63 +465,63 @@ public class BombController : MonoBehaviour
 		{
 			//Nudge the bomb slightly downward
 			transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z - unstuckSize);
-			Debug.Log("//Travelling LEFT | Colliding UP-LEFT");
+			//Debug.Log("//Travelling LEFT | Colliding UP-LEFT");
 		}
 
 		//Travelling LEFT | Colliding DOWN-LEFT
-		if (currentMovement.x < 0.0f && collisionLocationList.Contains("Down-Left"))
+		else if (currentMovement.x < 0.0f && collisionLocationList.Contains("Down-Left"))
 		{
 			//Nudge the bomb slightly upward
 			transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + unstuckSize);
-			Debug.Log("//Travelling LEFT | Colliding DOWN-LEFT");
+			//Debug.Log("//Travelling LEFT | Colliding DOWN-LEFT");
 		}
 
 		//Travelling RIGHT | Colliding UP-RIGHT
-		if (currentMovement.x > 0.0f && collisionLocationList.Contains("Up-Right"))
+		else if (currentMovement.x > 0.0f && collisionLocationList.Contains("Up-Right"))
 		{
 			//Nudge the bomb slightly downward
 			transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z - unstuckSize);
-			Debug.Log("//Travelling RIGHT | Colliding UP-RIGHT");
+			//Debug.Log("//Travelling RIGHT | Colliding UP-RIGHT");
 		}
 
 		//Travelling RIGHT | Colliding DOWN-RIGHT
-		if (currentMovement.x > 0.0f && collisionLocationList.Contains("Down-Right"))
+		else if (currentMovement.x > 0.0f && collisionLocationList.Contains("Down-Right"))
 		{
 			//Nudge the bomb slightly upward
 			transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + unstuckSize);
-			Debug.Log("//Travelling RIGHT | Colliding DOWN-RIGHT");
+			//Debug.Log("//Travelling RIGHT | Colliding DOWN-RIGHT");
 		}
 
 		//Travelling UP | Colliding UP-LEFT
-		if (currentMovement.z > 0.0f && collisionLocationList.Contains("Up-Left"))
+		else if (currentMovement.z > 0.0f && collisionLocationList.Contains("Up-Left"))
 		{
 			//Nudge the bomb slightly downward
 			transform.position = new Vector3(transform.position.x + unstuckSize, transform.position.y, transform.position.z);
-			Debug.Log("//Travelling UP | Colliding UP-LEFT");
+			//Debug.Log("//Travelling UP | Colliding UP-LEFT");
 		}
 
 		//Travelling UP | Colliding UP-RIGHT
-		if (currentMovement.z > 0.0f && collisionLocationList.Contains("Up-Right"))
+		else if (currentMovement.z > 0.0f && collisionLocationList.Contains("Up-Right"))
 		{
 			//Nudge the bomb slightly upward
 			transform.position = new Vector3(transform.position.x - unstuckSize, transform.position.y, transform.position.z);
-			Debug.Log("//Travelling UP | Colliding UP-RIGHT");
+			//Debug.Log("//Travelling UP | Colliding UP-RIGHT");
 		}
 
 		//Travelling DOWN | Colliding DOWN-LEFT
-		if (currentMovement.z < 0.0f && collisionLocationList.Contains("Down-Left"))
+		else if (currentMovement.z < 0.0f && collisionLocationList.Contains("Down-Left"))
 		{
 			//Nudge the bomb slightly downward
 			transform.position = new Vector3(transform.position.x + unstuckSize, transform.position.y, transform.position.z);
-			Debug.Log("//Travelling DOWN | Colliding DOWN-LEFT");
+			//Debug.Log("//Travelling DOWN | Colliding DOWN-LEFT");
 		}
 
 		//Travelling DOWN | Colliding DOWN-RIGHT
-		if (currentMovement.z < 0.0f && collisionLocationList.Contains("Down-Right"))
+		else if (currentMovement.z < 0.0f && collisionLocationList.Contains("Down-Right"))
 		{
 			//Nudge the bomb slightly upward
 			transform.position = new Vector3(transform.position.x - unstuckSize, transform.position.y, transform.position.z);
-			Debug.Log("//Travelling DOWN | Colliding DOWN-RIGHT");
+			//Debug.Log("//Travelling DOWN | Colliding DOWN-RIGHT");
 		}
 	}
 
@@ -534,12 +534,12 @@ public class BombController : MonoBehaviour
 			if (collisionLocationList.Contains("Left"))
 			{
 				//Still colliding, keep storing the movement
-				Debug.Log("We are continuing to collide LEFT, continuing to store movement");
+				//Debug.Log("We are continuing to collide LEFT, continuing to store movement");
 			}
 			else
 			{
 				//No longer colliding, resume the movement 
-				Debug.Log("LEFT has been cleared, resuming movement");
+				//Debug.Log("LEFT has been cleared, resuming movement");
 				currentMovement.x = storedMovementX;
 				storedMovementX = 0.0f;
 			}
@@ -550,12 +550,12 @@ public class BombController : MonoBehaviour
 			if (collisionLocationList.Contains("Right"))
 			{
 				//Still colliding, keep storing the movement
-				Debug.Log("We are continuing to collide RIGHT, continuing to store movement");
+				//Debug.Log("We are continuing to collide RIGHT, continuing to store movement");
 			}
 			else
 			{
 				//No longer colliding, resume the movement 
-				Debug.Log("RIGHT has been cleared, resuming movement");
+				//Debug.Log("RIGHT has been cleared, resuming movement");
 				currentMovement.x = storedMovementX;
 				storedMovementX = 0.0f;
 			}
@@ -566,12 +566,12 @@ public class BombController : MonoBehaviour
 			if (collisionLocationList.Contains("Up"))
 			{
 				//Still colliding, keep storing the movement
-				Debug.Log("We are continuing to collide UP, continuing to store movement");
+				//Debug.Log("We are continuing to collide UP, continuing to store movement");
 			}
 			else
 			{
 				//No longer colliding, resume the movement 
-				Debug.Log("UP has been cleared, resuming movement");
+				//Debug.Log("UP has been cleared, resuming movement");
 				currentMovement.z = storedMovementZ;
 				storedMovementZ = 0.0f;
 			}
@@ -582,12 +582,12 @@ public class BombController : MonoBehaviour
 			if (collisionLocationList.Contains("Down"))
 			{
 				//Still colliding, keep storing the movement
-				Debug.Log("We are continuing to collide DOWN, continuing to store movement");
+				//Debug.Log("We are continuing to collide DOWN, continuing to store movement");
 			}
 			else
 			{
 				//No longer colliding, resume the movement 
-				Debug.Log("DOWN has been cleared, resuming movement");
+				//Debug.Log("DOWN has been cleared, resuming movement");
 				currentMovement.z = storedMovementZ;
 				storedMovementZ = 0.0f;
 			}
@@ -605,7 +605,7 @@ public class BombController : MonoBehaviour
 	{
 
 		//Colliding with another bomb
-		if (other.gameObject.tag == "Bomb")
+		if (other.gameObject.tag == "Bomb" && other.gameObject != bombThatPushedMe)
 		{
 
 			//If the other bomb is not sliding, we must push it
@@ -613,9 +613,12 @@ public class BombController : MonoBehaviour
 			if (otherBombScript.bombSliding == false)
 			{
 
-				//TODO: This is inconsistent, figure out why.
 				Vector3 bombPushDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
-				Debug.Log("I've hit a non-sliding bomb (on trigger), pushing to: " + bombPushDirection);
+				//Debug.Log("I've hit a non-sliding bomb (on trigger), pushing to: " + bombPushDirection);
+				//Tell the bomb we're pushing who we are - so it doesn't immediately re-collide with us
+				otherBombScript.bombThatPushedMe = gameObject;
+
+				//Call Bombkicked - passing in our current movement
 				otherBombScript.BombKicked(bombPushDirection);
 
 				//TODO: Play a sound and show a sprite

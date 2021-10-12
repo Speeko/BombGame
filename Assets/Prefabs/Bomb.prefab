@@ -210,6 +210,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   explosionPrefab: {fileID: 3371031467775059785, guid: 58b65191e06f73f4c9ca7fbe34b9b772, type: 3}
+  bombSliding: 0
 --- !u!54 &3304089114124357365
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -225,7 +226,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 3
 --- !u!1 &5192450890088556327
 GameObject:
   m_ObjectHideFlags: 0
@@ -5182,7 +5183,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11900000, guid: 28a5e79925e3ce04a82856c16a572cbe, type: 3}
       propertyPath: m_FieldOfView
-      value: 50
+      value: 70
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28a5e79925e3ce04a82856c16a572cbe, type: 3}

@@ -390,9 +390,10 @@ public class PlayerController : MonoBehaviour
 					//TODO: Use DOTween to animate the kick
 					Sequence bombKickAnim;
 					bombKickAnim = DOTween.Sequence();
-					bombKickAnim.Join(transform.DORotate(new Vector3(3.0f, 3.0f, 3.0f), kickAnimationTime / 3));
-					bombKickAnim.Join(transform.DORotate(new Vector3(-3.0f, -3.0f, -3.0f), kickAnimationTime / 3));
-					bombKickAnim.Join(transform.DORotate(new Vector3(0.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					// bombKickAnim.Join(transform.DOLocalRotate(new Vector3(3.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					// bombKickAnim.Join(transform.DOLocalRotate(new Vector3(-3.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					// bombKickAnim.Join(transform.DOLocalRotate(new Vector3(0.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					bombKickAnim.Join(transform.DOShakeRotation(kickAnimationTime, 30, 0, 0, true));
 					bombKickAnim.Play();
 				}
 
