@@ -10,6 +10,9 @@ public class GameController : MonoBehaviour
 	public float defaultGroundedGravity;
 	public float defaultGravity;
 
+	[Header("Collision Tags")]
+	public List<string> collisionTagList = new List<string>();
+
 	//Default bomb vars
 	[Header("Bombs")]
 	public float defaultBombTimer;

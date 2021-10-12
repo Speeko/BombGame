@@ -9,7 +9,7 @@ using DG.Tweening;
 public class PlayerController : MonoBehaviour
 {
 
-
+	#region Variables
 
 	//Get GameObject Components
 	private Rigidbody thisRb;
@@ -86,6 +86,9 @@ public class PlayerController : MonoBehaviour
 
 	private Vector3 lastBombExitPosition;
 
+	#endregion
+
+	#region Initialise
 
 	void Awake()
 	{
@@ -104,52 +107,6 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	void GetGameVars()
-	{
-		GameObject gameController = GameObject.Find("GameController");
-		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
-		groundedGravity = gameControllerScript.defaultGroundedGravity;
-		gravity = gameControllerScript.defaultGravity;
-		bombSize = gameControllerScript.defaultBombSize;
-
-		playerHasKickPowerup = gameControllerScript.defaultPlayerStartWithKickPowerup;
-		playerHasThrowPowerup = gameControllerScript.defaultPlayerStartWithThrowPowerup;
-		playerHealth = gameControllerScript.defaultPlayerHealth;
-		playerMaxHealth = gameControllerScript.defaultPlayerMaxHealth;
-		playerLives = gameControllerScript.defaultPlayerLives;
-		playerMaxLives = gameControllerScript.defaultPlayerMaxLives;
-		playerExplosionStrength = gameControllerScript.defaultPlayerExplosionStrength;
-		playerMaxExplosionStrength = gameControllerScript.defaultPlayerMaxExplosionStrength;
-		playerMoveSpeed = gameControllerScript.defaultPlayerMoveSpeed;
-		playerMaxMoveSpeed = gameControllerScript.defaultPlayerMaxMoveSpeed;
-		playerBombCount = gameControllerScript.defaultPlayerBombCount;
-		playerMaxBombCount = gameControllerScript.defaultPlayerBombCount;
-
-	}
-
-	void OnMovementInput(InputAction.CallbackContext context)
-	{
-
-
-		currentMovementInput = context.ReadValue<Vector2>();
-
-		currentMovement.x = currentMovementInput.x * playerMoveSpeed;
-		currentMovement.z = currentMovementInput.y * playerMoveSpeed;
-
-		currentMovementDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
-
-		if (currentMovementInput.x != 0 || currentMovementInput.y != 0)
-		{
-			isMovementPressed = true;
-			lastMovementDirection = new Vector3(currentMovementInput.x, 0.0f, currentMovementInput.y);
-		}
-		else
-		{
-			isMovementPressed = false;
-		}
-
-	}
-
 	void OnEnable()
 	{
 		playerInput.Player.Enable();
@@ -160,7 +117,6 @@ public class PlayerController : MonoBehaviour
 		playerInput.Player.Disable();
 	}
 
-	// Start is called before the first frame update
 	void Start()
 	{
 
@@ -194,32 +150,69 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	// Update is called once per frame
-	void Update()
+	void GetGameVars()
+	{
+		GameObject gameController = GameObject.Find("GameController");
+		GameController gameControllerScript = (GameController)gameController.GetComponent(typeof(GameController));
+		groundedGravity = gameControllerScript.defaultGroundedGravity;
+		gravity = gameControllerScript.defaultGravity;
+		bombSize = gameControllerScript.defaultBombSize;
+
+		playerHasKickPowerup = gameControllerScript.defaultPlayerStartWithKickPowerup;
+		playerHasThrowPowerup = gameControllerScript.defaultPlayerStartWithThrowPowerup;
+		playerHealth = gameControllerScript.defaultPlayerHealth;
+		playerMaxHealth = gameControllerScript.defaultPlayerMaxHealth;
+		playerLives = gameControllerScript.defaultPlayerLives;
+		playerMaxLives = gameControllerScript.defaultPlayerMaxLives;
+		playerExplosionStrength = gameControllerScript.defaultPlayerExplosionStrength;
+		playerMaxExplosionStrength = gameControllerScript.defaultPlayerMaxExplosionStrength;
+		playerMoveSpeed = gameControllerScript.defaultPlayerMoveSpeed;
+		playerMaxMoveSpeed = gameControllerScript.defaultPlayerMaxMoveSpeed;
+		playerBombCount = gameControllerScript.defaultPlayerBombCount;
+		playerMaxBombCount = gameControllerScript.defaultPlayerBombCount;
+
+	}
+
+	#endregion
+
+	#region UI
+
+	void WriteToUI()
 	{
 
+		//TODO: Make this look nicer
+		healthTestText = healthTestTextGameObject.GetComponent<Text>();
+		healthTestText.text = "health: " + playerHealth + "\n" + "lives: " + playerLives;
+		statsTestText = statsTestTextGameObject.GetComponent<Text>();
+		statsTestText.text = "bombs: " + playerBombCount + "\n" + "speed: " + playerMoveSpeed + "\n" + "explosion: " + playerExplosionStrength + "\n" + "CanKick: " + playerHasKickPowerup + "\n" + "CanThrow: " + playerHasThrowPowerup;
+	}
 
-		// Debug.Log("currently moving x: " + currentMovementInput.x);
-		// Debug.Log("Currently moving z: " + currentMovementInput.y);
-		//Debug.Log("Lastmovementdirection: " + lastMovementDirection);
+	void UpdateEventTestText(string text)
+	{
+		eventTestText.text = text;
+		Invoke("ClearEventTestText", 10.0f);
+	}
+
+	void ClearEventTestText()
+	{
+		eventTestText.text = "";
+	}
+
+	#endregion
+
+	#region EveryFrame
+
+	void Update()
+	{
 
 		//TODO: Player stunned
 		//TODO: Gravity
 
+		WriteToUI();
+
 		DrawRaycasts();
 
-		// //Move the player
-		// if (playerHasControl == true)
-		// {
-		// 	//Apply the player input to the character
-		// 	transform.Translate(playerMovementDirection * (playerMoveSpeed * Time.deltaTime), Space.World);
-
-		// }
-
-
-
 		ApplyGravity();
-
 
 		if (playerHasControl == true)
 		{
@@ -235,12 +228,6 @@ public class PlayerController : MonoBehaviour
 		}
 
 
-
-		//TODO: Remove DEBUG/TEST text
-		healthTestText = healthTestTextGameObject.GetComponent<Text>();
-		healthTestText.text = "health: " + playerHealth + "\n" + "lives: " + playerLives;
-		statsTestText = statsTestTextGameObject.GetComponent<Text>();
-		statsTestText.text = "bombs: " + playerBombCount + "\n" + "speed: " + playerMoveSpeed + "\n" + "explosion: " + playerExplosionStrength + "\n" + "CanKick: " + playerHasKickPowerup + "\n" + "CanThrow: " + playerHasThrowPowerup;
 	}
 
 	void ApplyGravity()
@@ -252,105 +239,6 @@ public class PlayerController : MonoBehaviour
 		else
 		{
 			currentMovement.y = gravity;
-		}
-	}
-
-	// // void OnMove(InputValue movementValue)
-	// // {
-
-	// // 	//TODO: Only allow player to move in 8 directions (like N64)
-	// // 	// Vector2 movementVector = movementValue.Get<Vector2>();
-
-	// // 	// movementX = movementVector.x;
-	// // 	// movementY = movementVector.y;
-
-	// // 	// playerMovementDirection = new Vector3(movementX, 0.0f, movementY);
-
-	// // 	// if (playerMovementDirection != Vector3.zero)
-	// // 	// {
-	// // 	// 	playerMoving = true;
-	// // 	// 	playerLastMovementDirection = playerMovementDirection;
-	// // 	// 	transform.forward = playerMovementDirection;
-
-
-	// // 	// }
-	// // 	// else
-	// // 	// {
-	// // 	// 	playerMoving = false;
-	// // 	// }
-
-
-
-	// // 	//TODO: Handle sliding along collision objects
-
-
-
-	// }
-
-	void OnBomb()
-	{
-
-		//TODO: Handle picking up bomb (including spawning straight into hand)
-		//TODO: Pump up bomb when holding
-		if (lastBomb == null)
-		{
-			DropBomb();
-		}
-		else
-		{
-			//If we're still standing on our bomb, then the input kicks it instead
-			//TODO: Check if we're standing on ANY bomb (it could happen) and kick it
-			KickBomb(lastBomb);
-		}
-
-
-	}
-
-	void OnStopSlide()
-	{
-		if (lastKickedBomb != null)
-		{
-			//Stop our last kicked bomb if it is still sliding
-			BombController lastKickedBombScript = (BombController)lastKickedBomb.GetComponent(typeof(BombController));
-
-			if (lastKickedBombScript.IsBombSliding() == true)
-			{
-				lastKickedBombScript.StopBombSliding();
-			}
-		}
-
-	}
-	void OnPickup()
-	{
-		//TODO: If we're facing or standing on a bomb, pick it up
-		//TODO: IF we're already holding a bomb, throw it
-		//TODO: If we're not standing on anything and we have bombs remaining, spawn and pickup in one motion
-	}
-
-	void DropBomb()
-	{
-
-		//Set the size of the bomb we're dropping
-
-
-
-		//TODO: Move the bomb drop logic here to support bombs being dropped by a curse rather than player input
-		//Check if we have any bombs left
-		if (playerRemainingBombCount > 0)
-		{
-			//Spawn bomb
-			lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, transform.position.y - (bombSize / 2), transform.position.z), Quaternion.identity);
-			//Add this bomb to our list of bombs currently active
-			myBombsList.Add(lastBomb);
-			//Tell the bomb who its daddy is
-			lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
-			lastBombScript.SetParent(gameObject);
-			//Set the bomb's explosion strength to our current explosion strength
-			lastBombScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
-			//Start the fuse of the bomb
-			lastBombScript.SetFuse();
-			//Decrement our remaining bombs by 1
-			playerRemainingBombCount--;
 		}
 	}
 
@@ -370,7 +258,20 @@ public class PlayerController : MonoBehaviour
 
 		//Gravity
 		Debug.DrawLine(playerFeet0, playerFeet0 + Vector3.down, Color.yellow, 0.01f);
+
+		//Movement
 		Debug.DrawLine(playerFeet0, playerFeet0 + collisionPoint, Color.yellow, 0.01f);
+
+		//Collision
+		Debug.DrawLine(transform.position, transform.position + Vector3.forward, Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.Normalize(Vector3.forward + Vector3.left), Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.Normalize(Vector3.forward + Vector3.right), Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.back, Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.Normalize(Vector3.back + Vector3.left), Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.Normalize(Vector3.back + Vector3.right), Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.left, Color.red, 0.01f);
+		Debug.DrawLine(transform.position, transform.position + Vector3.right, Color.red, 0.01f);
+
 		//Debug.DrawLine(playerFeet1, playerFeet0 + collisionPoint, Color.yellow, 0.01f);
 		//Debug.DrawLine(playerFeet2, playerFeet0 + collisionPoint, Color.yellow, 0.01f);
 		//Debug.DrawLine(playerFeet3, playerFeet0 + collisionPoint, Color.yellow, 0.01f);
@@ -395,6 +296,174 @@ public class PlayerController : MonoBehaviour
 
 	}
 
+	#endregion
+
+	#region PlayerInput
+
+	void OnMovementInput(InputAction.CallbackContext context)
+	{
+
+
+		currentMovementInput = context.ReadValue<Vector2>();
+
+		currentMovement.x = currentMovementInput.x * playerMoveSpeed;
+		currentMovement.z = currentMovementInput.y * playerMoveSpeed;
+
+		currentMovementDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
+
+		if (currentMovementInput.x != 0 || currentMovementInput.y != 0)
+		{
+			isMovementPressed = true;
+			lastMovementDirection = new Vector3(currentMovementInput.x, 0.0f, currentMovementInput.y);
+		}
+		else
+		{
+			isMovementPressed = false;
+		}
+
+	}
+
+	void OnBomb()
+	{
+
+		//TODO: Handle picking up bomb (including spawning straight into hand)
+		//TODO: Pump up bomb when holding
+		if (lastBomb == null)
+		{
+			DropBomb();
+		}
+		else
+		{
+			//If we're still standing on our bomb, then the input kicks it instead
+			//TODO: Check if we're standing on ANY bomb (it could happen) and kick it
+			KickBomb(lastBomb);
+		}
+
+	}
+
+	void DropBomb()
+	{
+
+		//Set the size of the bomb we're dropping
+
+		//Check if we have any bombs left
+		if (playerRemainingBombCount > 0)
+		{
+			//Spawn bomb
+			lastBomb = Instantiate(bombPrefab, new Vector3(transform.position.x, transform.position.y - (bombSize / 2), transform.position.z), Quaternion.identity);
+			//Add this bomb to our list of bombs currently active
+			myBombsList.Add(lastBomb);
+			//Tell the bomb who its daddy is
+			lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
+			lastBombScript.SetParent(gameObject);
+			//Set the bomb's explosion strength to our current explosion strength
+			lastBombScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
+			//Start the fuse of the bomb
+			lastBombScript.SetFuse();
+			//Decrement our remaining bombs by 1
+			playerRemainingBombCount--;
+		}
+	}
+
+	void KickBomb(GameObject bomb)
+	{
+		if (playerHasKickPowerup == true)
+		{
+
+			if (playerCanKickBomb == true)
+			{
+
+				//lastBomb = null;
+
+				otherBombScript = (BombController)bomb.GetComponent(typeof(BombController));
+
+				//Check if this bomb can be kicked
+				if (otherBombScript.bombSliding == false)
+				{
+					//Vector3 bombKickDirection = lastMovementDirection;
+					//Take away control while we kick the bomb
+					StartCoroutine(DoKickBomb(bomb, lastMovementDirection, kickAnimationTime));
+					playerHasControl = false;
+					playerCanKickBomb = false;
+					//Start playing the bomb kick animation
+
+					//TODO: Use DOTween to animate the kick
+					Sequence bombKickAnim;
+					bombKickAnim = DOTween.Sequence();
+					bombKickAnim.Join(transform.DORotate(new Vector3(3.0f, 3.0f, 3.0f), kickAnimationTime / 3));
+					bombKickAnim.Join(transform.DORotate(new Vector3(-3.0f, -3.0f, -3.0f), kickAnimationTime / 3));
+					bombKickAnim.Join(transform.DORotate(new Vector3(0.0f, 0.0f, 0.0f), kickAnimationTime / 3));
+					bombKickAnim.Play();
+				}
+
+			}
+		}
+
+	}
+
+	IEnumerator DoKickBomb(GameObject bomb, Vector3 direction, float time)
+	{
+		yield return new WaitForSeconds(time);
+
+		//Check the bomb hasn't exploded in the time it took to kick
+		if (bomb != null)
+		{
+
+			//Kick the bomb in the direction we're facing
+			//Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
+			//otherBombRb.AddForce(direction * (playerMoveSpeed * 100));
+
+			//Set the bomb we kicked to a sliding state
+			//otherBombScript.StartBombSliding();
+			Vector3 bombKickDirection = new Vector3(direction.x, transform.position.y - (bombSize / 2), direction.z);
+			otherBombScript.BombKicked(bombKickDirection);
+		}
+
+		//Bomb has been kicked, give us back control
+		playerHasControl = true;
+		playerCanKickBomb = true;
+
+		//Save the last bomb we kicked so we can stop it with an input
+		lastKickedBomb = bomb;
+	}
+
+	void OnStopSlide()
+	{
+		if (lastKickedBomb != null)
+		{
+			//Stop our last kicked bomb if it is still sliding
+			BombController lastKickedBombScript = (BombController)lastKickedBomb.GetComponent(typeof(BombController));
+
+			if (lastKickedBombScript.bombSliding == true)
+			{
+				lastKickedBombScript.StopBombSliding();
+			}
+		}
+
+	}
+
+	void OnPickup()
+	{
+		//TODO: If we're facing or standing on a bomb, pick it up
+		//TODO: IF we're already holding a bomb, throw it
+		//TODO: If we're not standing on anything and we have bombs remaining, spawn and pickup in one motion
+	}
+
+	void Pickup(GameObject gameObject)
+	{
+		//TODO: PLay pickup animation
+		//TODO: Set the gameobject to the child of the player
+	}
+
+	void Throw(Vector3 throwDirection)
+	{
+
+	}
+
+	#endregion
+
+	#region Collision
+
 	void OnControllerColliderHit(ControllerColliderHit other)
 	{
 
@@ -412,7 +481,7 @@ public class PlayerController : MonoBehaviour
 			{
 				//TODO: Check if the other bomb was sliding when it hits us, if so become stunned
 				BombController incomingBomb = (BombController)other.gameObject.GetComponent(typeof(BombController));
-				if (incomingBomb.IsBombSliding() == true)
+				if (incomingBomb.bombSliding == true)
 				{
 					//TODO: Become stunned
 					//PlayerStunned();
@@ -455,18 +524,31 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-
-
 	void OnTriggerExit(Collider other)
 	{
 		//Clear the lastBomb if we step off it
 		//TODO: This is getting called twice for some reason - fix it
-		if (other.gameObject.tag == "Bomb")
+		if (other.gameObject == lastBomb)
 		{
 			if (lastBomb = other.gameObject)
 			{
 				lastBomb = null;
 			}
+		}
+	}
+
+	#endregion
+
+	#region Interactions
+
+	//This is called by one of our children bombs when it explodes
+	public void BombExploded(GameObject bomb)
+	{
+		//If the exploding bomb was ours, then give us back our bomb count
+		if (myBombsList.Contains(bomb))
+		{
+			myBombsList.Remove(bomb);
+			playerRemainingBombCount++;
 		}
 	}
 
@@ -544,26 +626,11 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-
 	void PlayerStunned(Vector3 knockBack, float stunTime)
 	{
 		//TODO: Stun the player and knock them back
 		//TODO: Allow the player to decrease the stun time by mashing the button
 		//TODO: Show a stun animation
-	}
-
-	//TODO: Remove this
-	public void DebugThing()
-	{
-		// UpdateEventTestText("explosion up");
-		// //EXPLOSION UP
-		// if (playerExplosionStrength < playerMaxExplosionStrength)
-		// {
-		// 	playerExplosionStrength++;
-		// }
-
-		playerExplosionStrength++;
-
 	}
 
 	void GetPowerup(GameObject powerup)
@@ -641,107 +708,26 @@ public class PlayerController : MonoBehaviour
 		Destroy(powerup);
 	}
 
-	//This is called by one of our children bombs when it explodes
-	public void BombExploded(GameObject bomb)
-	{
-		//If the exploding bomb was ours, then give us back our bomb count
-		if (myBombsList.Contains(bomb))
-		{
-			myBombsList.Remove(bomb);
-			playerRemainingBombCount++;
-		}
-	}
-
-	void KickBomb(GameObject bomb)
-	{
-		if (playerHasKickPowerup == true)
-		{
-
-			if (playerCanKickBomb == true)
-			{
-
-				//lastBomb = null;
-
-				otherBombScript = (BombController)bomb.GetComponent(typeof(BombController));
-
-				//Check if this bomb can be kicked
-				if (otherBombScript.IsBombSliding() == false)
-				{
-					//Vector3 bombKickDirection = lastMovementDirection;
-					//Take away control while we kick the bomb
-					StartCoroutine(DoKickBomb(bomb, lastMovementDirection, kickAnimationTime));
-					playerHasControl = false;
-					playerCanKickBomb = false;
-					//Start playing the bomb kick animation
-
-					//TODO: Use DOTween to animate the kick
-					Sequence bombKickAnim;
-					bombKickAnim = DOTween.Sequence();
-					bombKickAnim.Join(transform.DORotate(new Vector3(3.0f, 3.0f, 3.0f), kickAnimationTime / 3));
-					bombKickAnim.Join(transform.DORotate(new Vector3(-3.0f, -3.0f, -3.0f), kickAnimationTime / 3));
-					bombKickAnim.Join(transform.DORotate(new Vector3(0.0f, 0.0f, 0.0f), kickAnimationTime / 3));
-					bombKickAnim.Play();
-				}
-
-			}
-		}
-
-	}
-
-	IEnumerator DoKickBomb(GameObject bomb, Vector3 direction, float time)
-	{
-		yield return new WaitForSeconds(time);
-
-		//Check the bomb hasn't exploded in the time it took to kick
-		if (bomb != null)
-		{
-
-			//Kick the bomb in the direction we're facing
-			//Rigidbody otherBombRb = bomb.GetComponent<Rigidbody>();
-			//otherBombRb.AddForce(direction * (playerMoveSpeed * 100));
-
-			//Set the bomb we kicked to a sliding state
-			//otherBombScript.StartBombSliding();
-			Vector3 bombKickDirection = new Vector3(direction.x, transform.position.y - (bombSize / 2), direction.z);
-			otherBombScript.BombKicked(bombKickDirection);
-		}
-
-		//Bomb has been kicked, give us back control
-		playerHasControl = true;
-		playerCanKickBomb = true;
-
-		//Save the last bomb we kicked so we can stop it with an input
-		lastKickedBomb = bomb;
-	}
-
-	void Pickup(GameObject gameObject)
-	{
-		//TODO: PLay pickup animation
-		//TODO: Set the gameobject to the child of the player
-	}
-
-	void Drop()
+	void DropHeld()
 	{
 		//TODO: Drop whatever we're holding (if stunned, killed, player escapes, etc)
 	}
 
-	void Throw(Vector3 throwDirection)
+
+	#endregion
+
+	//TODO: Remove this
+	public void DebugThing()
 	{
+		// UpdateEventTestText("explosion up");
+		// //EXPLOSION UP
+		// if (playerExplosionStrength < playerMaxExplosionStrength)
+		// {
+		// 	playerExplosionStrength++;
+		// }
+
+		playerExplosionStrength++;
 
 	}
-
-	void UpdateEventTestText(string text)
-	{
-		eventTestText.text = text;
-		Invoke("ClearEventTestText", 10.0f);
-	}
-
-	void ClearEventTestText()
-	{
-		eventTestText.text = "";
-	}
-
-
-
 
 }
