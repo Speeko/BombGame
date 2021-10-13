@@ -48,6 +48,8 @@ public class PlayerController : MonoBehaviour
 	private bool playerCanKickBomb = true;
 	private BombController otherBombScript;
 	private GameObject lastKickedBomb;
+	private GameObject bombInHand;
+	private BombController bombInHandScript;
 	private float bombSize;
 
 	//Set movement variables
@@ -97,11 +99,11 @@ public class PlayerController : MonoBehaviour
 		characterController = GetComponent<CharacterController>();
 		characterController.enableOverlapRecovery = false;
 
-		playerInput.Player.Move.started += OnMovementInput;
+		playerInput.Player.MoveInput.started += OnMovementInput;
 
-		playerInput.Player.Move.canceled += OnMovementInput;
+		playerInput.Player.MoveInput.canceled += OnMovementInput;
 
-		playerInput.Player.Move.performed += OnMovementInput;
+		playerInput.Player.MoveInput.performed += OnMovementInput;
 
 		lastMovementDirection = Vector3.back;
 
@@ -323,20 +325,24 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	void OnBomb()
+	void OnBombDropInput()
 	{
-
+		Debug.Log("BombDropInput");
 		//TODO: Handle picking up bomb (including spawning straight into hand)
 		//TODO: Pump up bomb when holding
-		if (lastBomb == null)
+		if (lastBomb == null && bombInHand == null)
 		{
 			DropBomb();
 		}
-		else
+		else if (lastBomb != null)
 		{
 			//If we're still standing on our bomb, then the input kicks it instead
 			//TODO: Check if we're standing on ANY bomb (it could happen) and kick it
 			KickBomb(lastBomb);
+		}
+		else if (bombInHand != null)
+		{
+			//TODO: Pump up bomb
 		}
 
 	}
@@ -428,8 +434,11 @@ public class PlayerController : MonoBehaviour
 		lastKickedBomb = bomb;
 	}
 
-	void OnStopSlide()
+	void OnStopSlideInput()
 	{
+
+		Debug.Log("StopSlideInput");
+
 		if (lastKickedBomb != null)
 		{
 			//Stop our last kicked bomb if it is still sliding
@@ -443,11 +452,32 @@ public class PlayerController : MonoBehaviour
 
 	}
 
-	void OnPickup()
+	void OnThrowInput()
 	{
 		//TODO: If we're facing or standing on a bomb, pick it up
 		//TODO: IF we're already holding a bomb, throw it
 		//TODO: If we're not standing on anything and we have bombs remaining, spawn and pickup in one motion
+		Debug.Log("ThrowInput");
+		if (bombInHand == null)
+		{
+			//Spawn bomb in hand
+			bombInHand = Instantiate(bombPrefab, transform.position + lastMovementDirection, Quaternion.identity, transform);
+			//Add this bomb to our list of bombs currently active
+			myBombsList.Add(bombInHand);
+			//Tell the bomb who its daddy is
+			bombInHandScript = (BombController)bombInHand.GetComponent(typeof(BombController));
+			bombInHandScript.SetParent(gameObject);
+
+
+			//Decrement our remaining bombs by 1
+			playerRemainingBombCount--;
+		}
+		else
+		{
+			Throw(lastMovementDirection);
+		}
+
+
 	}
 
 	void Pickup(GameObject gameObject)
@@ -458,7 +488,15 @@ public class PlayerController : MonoBehaviour
 
 	void Throw(Vector3 throwDirection)
 	{
+		//De-couple the bomb from our player
+		bombInHand.transform.parent = null;
+		bombInHand = null;
 
+		//TODO: Play a throw animation and throw the bomb in an arc
+
+		//Call fuse when we throw the bomb
+		bombInHandScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
+		bombInHandScript.SetFuse();
 	}
 
 	#endregion
@@ -478,7 +516,7 @@ public class PlayerController : MonoBehaviour
 		{
 
 			//Check we're not hitting our own bomb
-			if (other.gameObject != lastBomb)
+			if (other.gameObject != lastBomb && other.gameObject != bombInHand)
 			{
 				//TODO: Check if the other bomb was sliding when it hits us, if so become stunned
 				BombController incomingBomb = (BombController)other.gameObject.GetComponent(typeof(BombController));
