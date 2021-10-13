@@ -20,11 +20,13 @@ public class BombController : MonoBehaviour
 	private bool bombExploding = false;
 	public bool bombSliding;
 	private float bombSlideSpeed;
-	private int bombPower;
+	public int bombPower;
 	private float bombGrowthSize;
 	private float bombGrowthInterval;
 	private Sequence bombPulseSequence;
 	private Sequence bombExplodeSequence;
+	private float bombMaxSize;
+	public bool bombIsFullyPumped;
 
 	//Movement variables
 	private Vector3 currentMovement;
@@ -58,6 +60,7 @@ public class BombController : MonoBehaviour
 		bombSlideSpeed = gameControllerScript.defaultBombSlideSpeed;
 		bombTimeToExplode = gameControllerScript.defaultBombTimeToExplode;
 		collisionTagList = gameControllerScript.collisionTagList;
+		bombMaxSize = gameControllerScript.defaultBombMaxSize;
 	}
 
 	void Start()
@@ -72,6 +75,19 @@ public class BombController : MonoBehaviour
 	#endregion
 
 	#region InitialiseFromParent
+
+	public void UpdateBombSize(float increment)
+	{
+		if (transform.localScale.x < bombMaxSize)
+		{
+			transform.localScale = new Vector3(transform.localScale.x + increment, transform.localScale.y + increment, transform.localScale.z + increment);
+		}
+	}
+
+	public void SetBombExplosionPower(int power)
+	{
+		bombPower = power;
+	}
 
 	public void SetFuse()
 	{
@@ -88,10 +104,10 @@ public class BombController : MonoBehaviour
 		bombOwner = parent;
 	}
 
-	public void SetBombExplosionPower(int power, float bombSize)
+	public void SetBombSize(float bombSize, bool bigBomb)
 	{
 		transform.localScale = new Vector3(bombSize, bombSize, bombSize);
-		bombPower = power;
+		bombIsFullyPumped = bigBomb;
 	}
 
 	#endregion

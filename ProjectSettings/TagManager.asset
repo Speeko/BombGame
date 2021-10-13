@@ -8,13 +8,6 @@ TagManager:
   - Bomb
   - Explosion
   - Container
-  - Powerup-Bomb
-  - Powerup-Speed
-  - Powerup-Explosion
-  - Powerup-Health
-  - Powerup-Life
-  - Powerup-Throw
-  - Powerup-Kick
   - Powerup
   layers:
   - Default

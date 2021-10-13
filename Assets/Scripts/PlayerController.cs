@@ -51,6 +51,10 @@ public class PlayerController : MonoBehaviour
 	private GameObject bombInHand;
 	private BombController bombInHandScript;
 	private float bombSize;
+	private float heldBombSize;
+	private float bombMaxSize;
+	private bool bombCanGrow;
+	private int bombPumpedExplosionStrengthAdd;
 
 	//Set movement variables
 	private bool playerHasControl = true;
@@ -159,6 +163,8 @@ public class PlayerController : MonoBehaviour
 		groundedGravity = gameControllerScript.defaultGroundedGravity;
 		gravity = gameControllerScript.defaultGravity;
 		bombSize = gameControllerScript.defaultBombSize;
+		bombMaxSize = gameControllerScript.defaultBombMaxSize;
+		bombPumpedExplosionStrengthAdd = gameControllerScript.defaultBombPumpedExplosionStrengthAdd;
 
 		playerHasKickPowerup = gameControllerScript.defaultPlayerStartWithKickPowerup;
 		playerHasThrowPowerup = gameControllerScript.defaultPlayerStartWithThrowPowerup;
@@ -343,6 +349,20 @@ public class PlayerController : MonoBehaviour
 		else if (bombInHand != null)
 		{
 			//TODO: Pump up bomb
+			if (bombCanGrow == true)
+			{
+				if (heldBombSize < bombMaxSize)
+				{
+					bombInHandScript.UpdateBombSize(0.1f);
+					heldBombSize = heldBombSize + 0.1f;
+				}
+				else
+				{
+					bombCanGrow = false;
+					bombInHandScript.SetBombExplosionPower(playerExplosionStrength + bombPumpedExplosionStrengthAdd);
+					//TODO: Show visibly that the bomb is fully grown
+				}
+			}
 		}
 
 	}
@@ -363,7 +383,8 @@ public class PlayerController : MonoBehaviour
 			lastBombScript = (BombController)lastBomb.GetComponent(typeof(BombController));
 			lastBombScript.SetParent(gameObject);
 			//Set the bomb's explosion strength to our current explosion strength
-			lastBombScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
+			lastBombScript.SetBombSize(bombSize, false);
+			lastBombScript.SetBombExplosionPower(playerExplosionStrength);
 			//Start the fuse of the bomb
 			lastBombScript.SetFuse();
 			//Decrement our remaining bombs by 1
@@ -413,7 +434,7 @@ public class PlayerController : MonoBehaviour
 		yield return new WaitForSeconds(time);
 
 		//Check the bomb hasn't exploded in the time it took to kick
-		if (bomb != null)
+		if (bomb != null && otherBombScript.bombIsFullyPumped == false)
 		{
 
 			//Kick the bomb in the direction we're facing
@@ -422,6 +443,7 @@ public class PlayerController : MonoBehaviour
 
 			//Set the bomb we kicked to a sliding state
 			//otherBombScript.StartBombSliding();
+
 			Vector3 bombKickDirection = new Vector3(direction.x, transform.position.y - (bombSize / 2), direction.z);
 			otherBombScript.BombKicked(bombKickDirection);
 		}
@@ -468,6 +490,8 @@ public class PlayerController : MonoBehaviour
 			bombInHandScript = (BombController)bombInHand.GetComponent(typeof(BombController));
 			bombInHandScript.SetParent(gameObject);
 
+			bombCanGrow = true;
+			heldBombSize = bombSize;
 
 			//Decrement our remaining bombs by 1
 			playerRemainingBombCount--;
@@ -488,15 +512,42 @@ public class PlayerController : MonoBehaviour
 
 	void Throw(Vector3 throwDirection)
 	{
-		//De-couple the bomb from our player
-		bombInHand.transform.parent = null;
-		bombInHand = null;
+		if (playerHasThrowPowerup)
+		{
 
-		//TODO: Play a throw animation and throw the bomb in an arc
 
-		//Call fuse when we throw the bomb
-		bombInHandScript.SetBombExplosionPower(playerExplosionStrength, bombSize);
-		bombInHandScript.SetFuse();
+			//TODO: Play a throw animation and throw the bomb in an arc
+
+			//Increase the strength if this bomb is fully pumped (TODO: have this be set on the bomb directly)
+			int strength = playerExplosionStrength;
+			bool bombFullyPumped;
+
+			if (bombCanGrow == false)
+			{
+				//Bomb is fully pumped
+				strength = playerExplosionStrength + bombPumpedExplosionStrengthAdd;
+				bombFullyPumped = true;
+			}
+			else
+			{
+				//Bomb is not fully pumped
+				strength = playerExplosionStrength;
+				bombFullyPumped = false;
+			}
+
+			//De-couple the bomb from our player
+			bombInHand.transform.parent = null;
+			bombInHand = null;
+
+			//Call fuse when we throw the bomb
+			bombInHandScript.SetBombSize(heldBombSize, bombFullyPumped);
+			bombInHandScript.SetBombExplosionPower(strength);
+			bombInHandScript.SetFuse();
+
+			//Reset variables
+			bombCanGrow = true;
+			heldBombSize = bombSize;
+		}
 	}
 
 	#endregion

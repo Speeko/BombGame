@@ -18,7 +18,9 @@ public class GameController : MonoBehaviour
 	public float defaultBombTimer;
 	public float defaultBombTimeToExplode;
 	public float defaultBombSize;
+	public float defaultBombMaxSize;
 	public float defaultBombSlideSpeed;
+	public int defaultBombPumpedExplosionStrengthAdd;
 
 	//Default explosion vars
 	[Header("Explosions")]

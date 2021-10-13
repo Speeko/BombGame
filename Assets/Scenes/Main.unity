@@ -2403,7 +2403,9 @@ MonoBehaviour:
   defaultBombTimer: 4.9
   defaultBombTimeToExplode: 0.1
   defaultBombSize: 0.9
+  defaultBombMaxSize: 1.6
   defaultBombSlideSpeed: 8.5
+  defaultBombPumpedExplosionStrengthAdd: 2
   defaultExplosionSize: 2
   defaultExplosionLifeTime: 0.4
   defaultPowerupLifeTime: 10
