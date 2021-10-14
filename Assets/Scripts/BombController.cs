@@ -94,7 +94,7 @@ public class BombController : MonoBehaviour
 		//Invoke("ExplodeBomb", bombTimer);
 		bombArmed = true;
 		bombGrowthSize = transform.localScale.x / 10;
-		bombGrowthInterval = bombTimer / 10;
+		bombGrowthInterval = bombTimer / 20;
 		AnimateBomb();
 	}
 

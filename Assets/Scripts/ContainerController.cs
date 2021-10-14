@@ -24,7 +24,6 @@ public class ContainerController : MonoBehaviour
 		//If the explosion hits a container, destroy it and generate a powerup
 		if (other.gameObject.tag == "Explosion")
 		{
-			Debug.Log("Explosion hit a container");
 			//Create a powerup (including chance for no powerup)
 			CreatePowerup(transform.position);
 			//TODO: Add some kind of animation for destroying this (like a puff of smoke)

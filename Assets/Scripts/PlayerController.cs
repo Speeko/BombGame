@@ -85,6 +85,7 @@ public class PlayerController : MonoBehaviour
 	CharacterController characterController;
 	float groundedGravity;
 	float gravity;
+	Vector3 lastPosition;
 
 
 	private GameObject gameController;
@@ -225,6 +226,7 @@ public class PlayerController : MonoBehaviour
 		if (playerHasControl == true)
 		{
 			lastMovementInput = currentMovementInput;
+			lastPosition = transform.position;
 			characterController.Move(currentMovement * Time.deltaTime);
 
 			//Rotate the player towards the movement direction
@@ -409,8 +411,10 @@ public class PlayerController : MonoBehaviour
 				{
 					//Vector3 bombKickDirection = lastMovementDirection;
 					//Take away control while we kick the bomb
+					float nonControlTime = kickAnimationTime * 1.5f;
+					DenyPlayerInput(nonControlTime);
 					StartCoroutine(DoKickBomb(bomb, lastMovementDirection, kickAnimationTime));
-					playerHasControl = false;
+
 					playerCanKickBomb = false;
 					//Start playing the bomb kick animation
 
@@ -449,7 +453,6 @@ public class PlayerController : MonoBehaviour
 		}
 
 		//Bomb has been kicked, give us back control
-		playerHasControl = true;
 		playerCanKickBomb = true;
 
 		//Save the last bomb we kicked so we can stop it with an input
@@ -479,26 +482,29 @@ public class PlayerController : MonoBehaviour
 		//TODO: If we're facing or standing on a bomb, pick it up
 		//TODO: IF we're already holding a bomb, throw it
 		//TODO: If we're not standing on anything and we have bombs remaining, spawn and pickup in one motion
-		Debug.Log("ThrowInput");
-		if (bombInHand == null)
+		if (playerHasThrowPowerup)
 		{
-			//Spawn bomb in hand
-			bombInHand = Instantiate(bombPrefab, transform.position + lastMovementDirection, Quaternion.identity, transform);
-			//Add this bomb to our list of bombs currently active
-			myBombsList.Add(bombInHand);
-			//Tell the bomb who its daddy is
-			bombInHandScript = (BombController)bombInHand.GetComponent(typeof(BombController));
-			bombInHandScript.SetParent(gameObject);
+			Debug.Log("ThrowInput");
+			if (bombInHand == null)
+			{
+				//Spawn bomb in hand
+				bombInHand = Instantiate(bombPrefab, transform.position + lastMovementDirection, Quaternion.identity, transform);
+				//Add this bomb to our list of bombs currently active
+				myBombsList.Add(bombInHand);
+				//Tell the bomb who its daddy is
+				bombInHandScript = (BombController)bombInHand.GetComponent(typeof(BombController));
+				bombInHandScript.SetParent(gameObject);
 
-			bombCanGrow = true;
-			heldBombSize = bombSize;
+				bombCanGrow = true;
+				heldBombSize = bombSize;
 
-			//Decrement our remaining bombs by 1
-			playerRemainingBombCount--;
-		}
-		else
-		{
-			Throw(lastMovementDirection);
+				//Decrement our remaining bombs by 1
+				playerRemainingBombCount--;
+			}
+			else
+			{
+				Throw(lastMovementDirection);
+			}
 		}
 
 
@@ -512,42 +518,51 @@ public class PlayerController : MonoBehaviour
 
 	void Throw(Vector3 throwDirection)
 	{
-		if (playerHasThrowPowerup)
+
+
+		//TODO: Play a throw animation and throw the bomb in an arc
+
+		//Increase the strength if this bomb is fully pumped (TODO: have this be set on the bomb directly)
+		int strength = playerExplosionStrength;
+		bool bombFullyPumped;
+
+		if (bombCanGrow == false)
 		{
-
-
-			//TODO: Play a throw animation and throw the bomb in an arc
-
-			//Increase the strength if this bomb is fully pumped (TODO: have this be set on the bomb directly)
-			int strength = playerExplosionStrength;
-			bool bombFullyPumped;
-
-			if (bombCanGrow == false)
-			{
-				//Bomb is fully pumped
-				strength = playerExplosionStrength + bombPumpedExplosionStrengthAdd;
-				bombFullyPumped = true;
-			}
-			else
-			{
-				//Bomb is not fully pumped
-				strength = playerExplosionStrength;
-				bombFullyPumped = false;
-			}
-
-			//De-couple the bomb from our player
-			bombInHand.transform.parent = null;
-			bombInHand = null;
-
-			//Call fuse when we throw the bomb
-			bombInHandScript.SetBombSize(heldBombSize, bombFullyPumped);
-			bombInHandScript.SetBombExplosionPower(strength);
-			bombInHandScript.SetFuse();
-
-			//Reset variables
-			bombCanGrow = true;
-			heldBombSize = bombSize;
+			//Bomb is fully pumped
+			strength = playerExplosionStrength + bombPumpedExplosionStrengthAdd;
+			bombFullyPumped = true;
 		}
+		else
+		{
+			//Bomb is not fully pumped
+			strength = playerExplosionStrength;
+			bombFullyPumped = false;
+		}
+
+		//De-couple the bomb from our player
+		bombInHand.transform.parent = null;
+		bombInHand = null;
+
+		//Call fuse when we throw the bomb
+		bombInHandScript.SetBombSize(heldBombSize, bombFullyPumped);
+		bombInHandScript.SetBombExplosionPower(strength);
+		bombInHandScript.SetFuse();
+
+		//Reset variables
+		bombCanGrow = true;
+		heldBombSize = bombSize;
+
+	}
+
+	void DenyPlayerInput(float time)
+	{
+		playerHasControl = false;
+		Invoke("ReturnPlayerInput", time);
+	}
+
+	void ReturnPlayerInput()
+	{
+		playerHasControl = true;
 	}
 
 	#endregion
@@ -565,6 +580,9 @@ public class PlayerController : MonoBehaviour
 		//Colliding with a bomb
 		if (other.gameObject.tag == "Bomb")
 		{
+
+			//TODO: Find a way to prevent clipping with the bomb
+			transform.position = lastPosition - (currentMovement / 20);
 
 			//Check we're not hitting our own bomb
 			if (other.gameObject != lastBomb && other.gameObject != bombInHand)
