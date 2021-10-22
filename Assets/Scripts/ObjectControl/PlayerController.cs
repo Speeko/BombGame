@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MLAPI;
+using MLAPI.Messaging;
+using MLAPI.NetworkVariable;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -93,6 +96,12 @@ public class PlayerController : MonoBehaviour
 
 	private Vector3 lastBombExitPosition;
 
+	public NetworkVariableVector3 Position = new NetworkVariableVector3(new NetworkVariableSettings
+	{
+		WritePermission = NetworkVariablePermission.ServerOnly,
+		ReadPermission = NetworkVariablePermission.Everyone
+	});
+
 	#endregion
 
 	#region Initialise
@@ -144,10 +153,6 @@ public class PlayerController : MonoBehaviour
 		//TODO: Player death
 		//TODO: Player respawn w/ invincibility frames
 
-		//TODO: DEBUG/REMOVELATER
-		eventTestText = eventTestTextGameObject.GetComponent<Text>();
-		eventTestText.text = "player event";
-
 		//TODO: SEt a list of tags that cause collision. There's probably a better way to do this.
 		collisionTagList.Add("Wall");
 		collisionTagList.Add("Bomb");
@@ -190,6 +195,8 @@ public class PlayerController : MonoBehaviour
 	{
 
 		//TODO: Make this look nicer
+		eventTestText = eventTestTextGameObject.GetComponent<Text>();
+		eventTestText.text = "player event";
 		healthTestText = healthTestTextGameObject.GetComponent<Text>();
 		healthTestText.text = "health: " + playerHealth + "\n" + "lives: " + playerLives;
 		statsTestText = statsTestTextGameObject.GetComponent<Text>();
@@ -217,7 +224,7 @@ public class PlayerController : MonoBehaviour
 		//TODO: Player stunned
 		//TODO: Gravity
 
-		WriteToUI();
+		//WriteToUI();
 
 		DrawRaycasts();
 
@@ -335,7 +342,7 @@ public class PlayerController : MonoBehaviour
 
 	void OnBombDropInput()
 	{
-		Debug.Log("BombDropInput");
+		//Debug.Log("BombDropInput");
 		//TODO: Handle picking up bomb (including spawning straight into hand)
 		//TODO: Pump up bomb when holding
 		if (lastBomb == null && bombInHand == null)
@@ -462,7 +469,7 @@ public class PlayerController : MonoBehaviour
 	void OnStopSlideInput()
 	{
 
-		Debug.Log("StopSlideInput");
+		//Debug.Log("StopSlideInput");
 
 		if (lastKickedBomb != null)
 		{
@@ -484,7 +491,7 @@ public class PlayerController : MonoBehaviour
 		//TODO: If we're not standing on anything and we have bombs remaining, spawn and pickup in one motion
 		if (playerHasThrowPowerup)
 		{
-			Debug.Log("ThrowInput");
+			//Debug.Log("ThrowInput");
 			if (bombInHand == null)
 			{
 				//Spawn bomb in hand
@@ -748,7 +755,7 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "BombUp")
 		{
-			UpdateEventTestText("bomb up");
+			//UpdateEventTestText("bomb up");
 			//BOMB UP
 			//Increase our bomb count if we're not at the max already
 			if (playerBombCount < playerMaxBombCount)
@@ -760,7 +767,7 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "SpeedUp")
 		{
-			UpdateEventTestText("speed up");
+			//UpdateEventTestText("speed up");
 			//SPEED UP
 			if (playerMoveSpeed < playerMaxMoveSpeed)
 			{
@@ -770,7 +777,7 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "ExplosionUp")
 		{
-			UpdateEventTestText("explosion up");
+			//UpdateEventTestText("explosion up");
 			//EXPLOSION UP
 			if (playerExplosionStrength < playerMaxExplosionStrength)
 			{
@@ -780,7 +787,7 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "HealthUp")
 		{
-			UpdateEventTestText("health up");
+			//UpdateEventTestText("health up");
 			//HEALTH UP
 			if (playerHealth < playerMaxHealth)
 			{
@@ -790,7 +797,7 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "LivesUp")
 		{
-			UpdateEventTestText("lives up");
+			//UpdateEventTestText("lives up");
 			//LIVES UP
 			if (playerLives < playerMaxLives)
 			{
@@ -800,14 +807,14 @@ public class PlayerController : MonoBehaviour
 
 		if (powerupType == "KickPower")
 		{
-			UpdateEventTestText("kick power");
+			//UpdateEventTestText("kick power");
 			//KICK POWER
 			playerHasKickPowerup = true;
 		}
 
 		if (powerupType == "ThrowPower")
 		{
-			UpdateEventTestText("throw power");
+			//UpdateEventTestText("throw power");
 			//THROW POWER
 			playerHasThrowPowerup = true;
 		}
@@ -827,7 +834,7 @@ public class PlayerController : MonoBehaviour
 	//TODO: Remove this
 	public void DebugThing()
 	{
-		// UpdateEventTestText("explosion up");
+		// //UpdateEventTestText("explosion up");
 		// //EXPLOSION UP
 		// if (playerExplosionStrength < playerMaxExplosionStrength)
 		// {

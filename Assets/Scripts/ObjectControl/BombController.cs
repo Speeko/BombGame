@@ -626,7 +626,7 @@ public class BombController : MonoBehaviour
 
 			//If the other bomb is not sliding, we must push it
 			BombController otherBombScript = (BombController)other.gameObject.GetComponent(typeof(BombController));
-			if (otherBombScript.bombSliding == false)
+			if (otherBombScript.bombSliding == false && otherBombScript.bombIsFullyPumped == false)
 			{
 
 				Vector3 bombPushDirection = new Vector3(currentMovement.x, 0.0f, currentMovement.z);
